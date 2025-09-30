@@ -1,0 +1,26 @@
+# Build outputs
+bin/
+obj/
+*/bin/
+*/obj/
+
+# Visual Studio caches
+.vs/
+*.suo
+*.user
+
+# NuGet packages
+*.nupkg
+*.snupkg
+packages/
+
+# Logs
+*.log
+
+# Publish artifacts
+*.Publish.xml
+publish/
+
+# Node
+node_modules/
+dist/

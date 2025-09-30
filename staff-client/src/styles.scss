@@ -1,0 +1,76 @@
+@use '@angular/material' as mat;
+@import '@angular/material/prebuilt-themes/deeppurple-amber.css';
+@include mat.core();
+
+// Light theme
+$light-primary: mat.define-palette(mat.$indigo-palette);
+$light-accent: mat.define-palette(mat.$pink-palette);
+$light-theme: mat.define-light-theme((
+  color: (
+    primary: $light-primary,
+    accent: $light-accent,
+  )
+));
+
+// Dark theme
+$dark-primary: mat.define-palette(mat.$purple-palette);
+$dark-accent: mat.define-palette(mat.$green-palette);
+$dark-theme: mat.define-dark-theme((
+  color: (
+    primary: $dark-primary,
+    accent: $dark-accent,
+  )
+));
+
+// Apply the light theme by default
+@include mat.all-component-themes($light-theme);
+
+// Apply the dark theme only when the .dark-theme class is present
+.dark-theme {
+  @include mat.all-component-colors($dark-theme);
+  
+  // Updated dark theme variables for better contrast
+  --background-color: #121212;
+  --text-color: #e0e0e0;  // Slightly softer white for less eye strain
+  --surface-color: #1e1e1e;
+  --secondary-text-color: #a0a0a0;  // For less important text
+  
+  background-color: var(--background-color);
+  color: var(--text-color);
+
+  .mat-toolbar {
+    background-color: #2d2d2d;  // Slightly lighter than background for contrast
+    color: var(--text-color);
+  }
+
+  // Add styles for common elements in dark mode
+  a {
+    color: #bb86fc;  // Material Design dark theme primary color
+    &:hover {
+      color: #9966ff;
+    }
+  }
+
+  // Ensure input fields and other form elements are visible
+  input, textarea, select {
+    background-color: #2d2d2d;
+    color: var(--text-color);
+    border-color: #404040;
+  }
+}
+
+// Base styles
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Roboto", sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.mat-toolbar {
+  background-color: rgb(154, 199, 252);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}

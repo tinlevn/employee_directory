@@ -1,0 +1,94 @@
+<div>
+    <section class="searchbar">
+        <form>
+            <!-- Single row search fields container -->
+            <div class="search-fields-container">
+                <mat-form-field appearance="outline">
+                    <mat-label>First Name</mat-label>
+                    <input matInput name="firstName" [(ngModel)]="searchCriteria.firstName">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Last Name</mat-label>
+                    <input matInput name="lastName" [(ngModel)]="searchCriteria.lastName">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Job Title</mat-label>
+                    <input matInput name="jobTitle" [(ngModel)]="searchCriteria.jobTitle">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Department</mat-label>
+                    <mat-select name="department" [(ngModel)]="searchCriteria.department">
+                        <mat-option value="">All Departments</mat-option>
+                        <mat-option *ngFor="let department of departments" [value]="department">{{department}}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <!-- Location and filter group -->
+                    <mat-form-field appearance="outline">
+                        <mat-label>Location</mat-label>
+                        <mat-select name="location" [(ngModel)]="searchCriteria.location">
+                            <mat-option value="">All Locations</mat-option>
+                            <mat-option *ngFor="let location of locations" [value]="location">{{location}}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Quick Filter</mat-label>
+                        <input matInput (keyup)="applyFilter($event)" #input>
+                        <mat-icon matSuffix>search</mat-icon>
+                    </mat-form-field>   
+            </div>
+
+            <!-- Buttons container -->
+            <div class="button-container">
+                <button mat-raised-button color="primary" (click)="onSubmit()">
+                    <mat-icon>search</mat-icon>
+                </button>
+                <button mat-stroked-button (click)="clearFilter()">
+                    <mat-icon>clear</mat-icon>
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <div class="resulttable">
+        <table mat-table [dataSource]="dataSource" matSort>
+            <ng-container matColumnDef="lastName">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Name </th>
+                <td mat-cell *matCellDef="let employee"> <a href="mailTo:{{employee.email}}">{{employee.firstName}} {{employee.lastName}}</a></td>
+            </ng-container>
+
+            <ng-container matColumnDef="title">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Title </th>
+                <td mat-cell *matCellDef="let employee"> {{employee.title}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="extension">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Direct Dial </th>
+                <td mat-cell *matCellDef="let employee"> {{employee.extension}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="phone">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Phone </th>
+                <td mat-cell *matCellDef="let employee"> {{employee.phone}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="location">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Location </th>
+                <td mat-cell *matCellDef="let employee"> {{employee.location}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="department">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Department </th>
+                <td mat-cell *matCellDef="let employee"> {{employee.department}} </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <mat-paginator [pageSizeOptions]="pageSizes" showFirstLastButtons aria-label="Records per page">
+        </mat-paginator>
+    </div>
+</div>

@@ -1,0 +1,48 @@
+.spacer {
+  flex: auto;
+}
+
+.mat-toolbar {
+  background-color: rgb(154, 199, 252);
+  height: auto;
+  padding: 0.5rem 2rem;
+  box-shadow: 0 2px 8px rgba(135, 113, 0, 0.1);
+  position:relative;
+  top: 0;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  max-width: 1404px;
+  margin: 0 auto;
+  width: 90%;
+  border-radius: 0 0 8px 8px;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2c3e50;
+  letter-spacing: 0.5px;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: #1a2634;
+  }
+}
+
+.theme-toggle {
+  margin-right: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.theme-icon {
+  margin-left: 8px;
+  font-size: 20px;
+  height: 20px;
+  width: 20px;
+}
+

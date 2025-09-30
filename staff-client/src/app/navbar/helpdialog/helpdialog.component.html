@@ -1,0 +1,72 @@
+<h1 mat-dialog-title>Guides and tips for employee lookup</h1>
+<p>Simply click anywhere outside of this panel to close it.</p>
+
+<mat-dialog-content>
+    <h2>Employee Data Source</h2>
+    <p>Each week, the search data are updated by the HR/Payroll system. If you find information
+        that needs correcting such as phone number or work location, please contact either:
+        <a href="mailTo:lady@example.com">This Lady</a>
+    </p>
+
+    <h2>Employee Search Guides</h2>
+    <ul>
+        <li>For names containing an apostrophe, the apostrophe must be included to receive expected results.</li>
+        <li>For hyphenated names, you can search on either part of the name.</li>
+        <li> The <b>Filter</b> text field is used for filtering the current result set.
+            One keyword may be used to search through your current data list.</li>
+        <ul>
+            <li>For example, simply type in the “filter” text box a specific department,
+                location, or job title, and it will filter the result set according to that (in real time).</li>
+            <li> The only drawback (or limitation) of <b>Filter</b> is that it can only do one keyword at a time and not
+                multiple.
+                For correct search results with multiple criteria, please reset and make new search with proper inputs.
+            </li>
+        </ul>
+        <li>For dropwdown categories like <b>Division</b>, <b>Department</b>, <b>Location</b>, and <b>Job Group</b>, an
+            empty value selection is the equivalent of <b>any</b> and/or <b>all</b> for that category. So if a location
+            or
+            division is not specified,
+            then the result will return all divisions or locations.</li>
+        <li>To sort, click on any bold header to sort the search result according to that category <b>(Name, Title,
+                Direct Dial, Phone, Location, Division, Department, Job Group)</b></li>
+        <ul>
+            <li>One click sorts in ascending order, the second click in descending, and the third click on the header
+                clears the sorting.</li>
+            <li>There is an arrow to the right indicating the sort order when the header is clicked.</li>
+        </ul>
+        <li>To restart or make a new search, simply click Reset and start over.</li>
+    </ul>
+
+    <h2>Types of Searches</h2>
+    <p>You can conduct the following types of searches:</p>
+    <ul>
+        <li><b>Partial Value</b> (First Name, Last Name or Job Description) </li>
+        <ul>
+            <li>EXAMPLE: Enter “Mar” in First Name field returns all records where First Name contains “Mar” substring.
+            </li>
+        </ul>
+        <li><b>Combination Partial Values</b></li>
+        <ul>
+            <li>EXAMPLE: First Name -- “Mar” and <b>Job Description</b>- “Program” returns all records where First Name
+                contains substring Mar and Job Description contains Program.</li>
+        </ul>
+        <li><b>Drop-Down List</b></li>
+        <ul>
+            <li>EXAMPLE: Select <b>Operations</b> from Division to return all employee records for staff in Operations.
+            </li>
+        </ul>
+    </ul>
+
+    <h2>Search Results</h2>
+    <h3><u>Naviagation and Items per Page</u></h3>
+    <p>The default number of records displayed is set to 25.
+        However, you may change the number of items displayed per page by selecting from the at one time. You may change
+        the number by selecting from the menu <b>Items per
+            page </b> drop-down selector. Values of <b>50, 75, 100 & 500</b> are available.
+    </p>
+    <h3><u>Email Employee Name Hyperlink</u></h3>
+    <p>Click on an employee name to send an e-Mail directly to that employee from the Employee Directory. </p>
+    <mat-dialog-actions align="end">
+        <button mat-button mat-dialog-close>Close dialog</button>
+    </mat-dialog-actions>
+</mat-dialog-content>
