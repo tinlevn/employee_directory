@@ -3,11 +3,24 @@ bin/
 obj/
 */bin/
 */obj/
+Debug/
+Release/
+*/Debug/
+*/Release/
+build/
+out/
+target/
+artifacts/
+TestResults/
 
 # Visual Studio caches
 .vs/
 *.suo
 *.user
+*.rsuser
+*.userosscache
+*.sln.docstates
+*.ipch
 
 # NuGet packages
 *.nupkg
@@ -16,6 +29,7 @@ packages/
 
 # Logs
 *.log
+*.svclog
 
 # Publish artifacts
 *.Publish.xml
@@ -24,3 +38,24 @@ publish/
 # Node
 node_modules/
 dist/
+
+# Coverage reports
+coverage/
+coverage-*/
+
+# IDE settings
+.vscode/
+.idea/
+*.iml
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.pidb
+*.psess
+*.vsp
+*.vspx
