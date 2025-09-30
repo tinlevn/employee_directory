@@ -39,6 +39,10 @@ publish/
 node_modules/
 dist/
 
+# Angular cache
+.angular/
+*/.angular/
+
 # Coverage reports
 coverage/
 coverage-*/
@@ -59,3 +63,4 @@ Thumbs.db
 *.psess
 *.vsp
 *.vspx
+
