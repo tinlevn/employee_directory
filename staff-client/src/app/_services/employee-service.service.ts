@@ -1,22 +1,28 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
 import { Employee } from '../_models/employee';
 import { environment } from '../../environments/environment';
 import { Specifications } from '../_models/spec';
+
 @Injectable({
   providedIn: 'root'
 })
 export class EmployeeService {
+  private readonly baseUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) { }
+  constructor(private readonly http: HttpClient) { }
 
-  findEmployees(criteria: Specifications) {
-    return this.http.post<Employee[]>(environment.apiUrl + '/filter', criteria, {withCredentials: true});
+  findEmployees(criteria: Specifications): Observable<Employee[]> {
+    return this.http.post<Employee[]>(`${this.baseUrl}/filter`, criteria, {
+      withCredentials: true
+    });
   }
-  getAllEmployees() {
-    return this.http.get<Employee[]>(environment.apiUrl);
+
+  getAllEmployees(): Observable<Employee[]> {
+    return this.http.get<Employee[]>(this.baseUrl, {
+      withCredentials: true
+    });
   }
 }
-
-/*
-Add ", {withCredentials: true}" to post request to allow negotiation */

@@ -1,65 +1,47 @@
-@use '@angular/material' as mat;
 @import '@angular/material/prebuilt-themes/deeppurple-amber.css';
-@include mat.core();
 
-// Light theme
-$light-primary: mat.define-palette(mat.$indigo-palette);
-$light-accent: mat.define-palette(mat.$pink-palette);
-$light-theme: mat.define-light-theme((
-  color: (
-    primary: $light-primary,
-    accent: $light-accent,
-  )
-));
+:root {
+  color-scheme: light;
+  --background-color: #f4f7fb;
+  --text-color: #14213d;
+  --surface-color: #ffffff;
+  --secondary-text-color: #5f6b7a;
+  --border-color: rgba(15, 23, 42, 0.12);
+  --toolbar-gradient: linear-gradient(135deg, rgba(154, 199, 252, 0.95), rgba(125, 167, 255, 0.95));
+}
 
-// Dark theme
-$dark-primary: mat.define-palette(mat.$purple-palette);
-$dark-accent: mat.define-palette(mat.$green-palette);
-$dark-theme: mat.define-dark-theme((
-  color: (
-    primary: $dark-primary,
-    accent: $dark-accent,
-  )
-));
-
-// Apply the light theme by default
-@include mat.all-component-themes($light-theme);
-
-// Apply the dark theme only when the .dark-theme class is present
 .dark-theme {
-  @include mat.all-component-colors($dark-theme);
-  
-  // Updated dark theme variables for better contrast
-  --background-color: #121212;
-  --text-color: #e0e0e0;  // Slightly softer white for less eye strain
-  --surface-color: #1e1e1e;
-  --secondary-text-color: #a0a0a0;  // For less important text
-  
+  color-scheme: dark;
+  --background-color: #07111f;
+  --text-color: #e2e8f0;
+  --surface-color: #111c2f;
+  --secondary-text-color: #94a3b8;
+  --border-color: rgba(148, 163, 184, 0.16);
+  --toolbar-gradient: linear-gradient(135deg, rgba(17, 28, 47, 0.98), rgba(29, 41, 64, 0.96));
+
   background-color: var(--background-color);
   color: var(--text-color);
 
   .mat-toolbar {
-    background-color: #2d2d2d;  // Slightly lighter than background for contrast
+    background: var(--toolbar-gradient);
     color: var(--text-color);
   }
 
-  // Add styles for common elements in dark mode
   a {
-    color: #bb86fc;  // Material Design dark theme primary color
+    color: #8ab4ff;
+
     &:hover {
-      color: #9966ff;
+      color: #a7c7ff;
     }
   }
 
-  // Ensure input fields and other form elements are visible
   input, textarea, select {
-    background-color: #2d2d2d;
+    background-color: rgba(15, 23, 42, 0.9);
     color: var(--text-color);
-    border-color: #404040;
+    border-color: var(--border-color);
   }
 }
 
-// Base styles
 html, body {
   height: 100%;
 }
@@ -67,10 +49,21 @@ html, body {
 body {
   margin: 0;
   font-family: "Roboto", sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  background: radial-gradient(circle at top left, rgba(167, 202, 255, 0.14), transparent 30%), var(--background-color);
+  color: var(--text-color);
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 .mat-toolbar {
-  background-color: rgb(154, 199, 252);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  background: var(--toolbar-gradient);
+  color: var(--text-color);
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.app-content {
+  padding: 0.5rem 0 2rem;
 }

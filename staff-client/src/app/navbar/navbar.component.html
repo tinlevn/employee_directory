@@ -1,13 +1,13 @@
 <mat-toolbar>
-    <div></div>
-    <span class="page-title">Employee Directory</span>
-    <span class="spacer"></span>
-    <mat-slide-toggle 
-        class="theme-toggle"
-        [checked]="isDarkMode$ | async"
-        (change)="toggleDarkMode()"
-        color="primary">
-        <mat-icon class="theme-icon"></mat-icon>
-    </mat-slide-toggle>
-    <button mat-stroked-button (click)="openHelp()">Help</button>
+  <span class="page-title">Employee Directory</span>
+  <span class="spacer"></span>
+
+  <div class="toolbar-actions">
+    <div class="theme-toggle-wrapper" (click)="toggleDarkMode()" role="button" tabindex="0" (keydown.enter)="toggleDarkMode()" (keydown.space)="toggleDarkMode()">
+      <mat-icon class="theme-icon">{{ (isDarkMode$ | async) ? 'dark_mode' : 'light_mode' }}</mat-icon>
+      <span class="theme-label">{{ (isDarkMode$ | async) ? 'Dark' : 'Light' }}</span>
+    </div>
+
+    <button mat-stroked-button color="primary" (click)="openHelp()">Help</button>
+  </div>
 </mat-toolbar>

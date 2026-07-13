@@ -4,7 +4,7 @@ import { HttpClientModule } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { SearchResultComponent } from './searchresult/searchresult.component';
+import { SearchResultComponent } from './features/staff-directory/searchresult.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatSortModule } from '@angular/material/sort';
 import { MatPaginatorModule } from '@angular/material/paginator';
@@ -22,17 +22,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    SearchResultComponent,
-    NavbarComponent,
-    HelpdialogComponent
-  ],
+  declarations: [],
   imports: [
     BrowserModule,
-    HttpClientModule,
     AppRoutingModule,
-    BrowserAnimationsModule,
     MatSortModule,
     MatPaginatorModule,
     MatTableModule,
@@ -45,7 +38,9 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
     ReactiveFormsModule,
     MatDialogModule,
     MatButtonModule,
-    MatSlideToggleModule
+    MatSlideToggleModule,
+    SearchResultComponent,
+    NavbarComponent
   ],
   providers: [],
   bootstrap: [AppComponent],
