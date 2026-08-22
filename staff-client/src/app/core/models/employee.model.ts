@@ -1,12 +1,14 @@
 export interface Employee {
-  firstName: string;
-  lastName: string;
-  title: string;
-  extension: string;
-  phone: string;
-  location: string;
-  department: string;
-  email: string;
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  title: string | null;
+  extension: string | null;
+  phone: string | null;
+  location: string | null;
+  department: string | null;
+  email: string | null;
+  hiredDate: string | null;
 }
 
 export interface StaffSearchCriteria {
@@ -16,3 +18,11 @@ export interface StaffSearchCriteria {
   department: string;
   location: string;
 }
+
+export const EMPTY_SEARCH_CRITERIA: StaffSearchCriteria = {
+  firstName: '',
+  lastName: '',
+  jobTitle: '',
+  department: '',
+  location: ''
+};

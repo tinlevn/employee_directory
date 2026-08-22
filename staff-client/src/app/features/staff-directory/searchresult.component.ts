@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, DestroyRef, OnInit, ViewChild, computed, effect, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,15 +10,13 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { catchError, finalize, tap } from 'rxjs/operators';
-import { of } from 'rxjs';
 
-import { Employee, StaffSearchCriteria } from '../../core/models/employee.model';
+import { EMPTY_SEARCH_CRITERIA, Employee, StaffSearchCriteria } from '../../core/models/employee.model';
 import { EmployeeService } from '../../core/services/employee.service';
+import { STAFF_DIRECTORY_CONSTANTS } from '../../core/constants/staff-directory.constants';
 
 @Component({
   selector: 'app-searchresult',
-  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
@@ -34,40 +33,94 @@ import { EmployeeService } from '../../core/services/employee.service';
   styleUrls: ['./searchresult.component.scss']
 })
 export class SearchResultComponent implements OnInit {
-  departments = ['', 'Marketing', 'Sales', 'Product', 'Engineering', 'IT', 'Human Resources', 'Finance', 'Data Science', 'Design'];
-  locations = ['', 'Deer Island', 'Chelsea'];
-  pageSizes = [25, 50, 100, 250];
-  displayedColumns: string[] = ['lastName', 'title', 'extension', 'phone', 'location', 'department'];
+  private readonly employeeService = inject(EmployeeService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  searchCriteria: StaffSearchCriteria = {
-    firstName: '',
-    lastName: '',
-    jobTitle: '',
-    department: '',
-    location: ''
-  };
+  readonly departments = STAFF_DIRECTORY_CONSTANTS.DEPARTMENTS;
+  readonly locations = STAFF_DIRECTORY_CONSTANTS.LOCATIONS;
+  readonly pageSizes = STAFF_DIRECTORY_CONSTANTS.PAGE_SIZES;
+  readonly displayedColumns = STAFF_DIRECTORY_CONSTANTS.DISPLAY_COLUMNS;
+  readonly defaultPageSize = STAFF_DIRECTORY_CONSTANTS.DEFAULT_PAGE_SIZE;
+  readonly errorText = STAFF_DIRECTORY_CONSTANTS.ERROR_MESSAGE;
 
-  employeeList: Employee[] = [];
-  dataSource = new MatTableDataSource<Employee>();
-  isLoading = false;
-  hasLoaded = false;
-  errorMessage: string | null = null;
-  currentFilterValue = '';
-  totalCount = 0;
+  readonly searchCriteria = signal<StaffSearchCriteria>({ ...EMPTY_SEARCH_CRITERIA });
 
-  @ViewChild(MatSort, { static: false }) resultSort!: MatSort;
-  @ViewChild(MatPaginator, { static: false }) paginator!: MatPaginator;
+  readonly employeeList = signal<Employee[]>([]);
+  readonly isLoading = signal(false);
+  readonly hasLoaded = signal(false);
+  readonly hasError = signal(false);
 
-  constructor(private readonly service: EmployeeService) { }
+  readonly hasActiveFilters = computed(() =>
+    Object.values(this.searchCriteria()).some((value) => value.trim().length > 0)
+  );
+
+  readonly dataSource = new MatTableDataSource<Employee>([]);
+
+  @ViewChild(MatSort) private set sort(sort: MatSort) {
+    this.dataSource.sort = sort;
+  }
+
+  @ViewChild(MatPaginator) private set paginator(paginator: MatPaginator) {
+    this.dataSource.paginator = paginator;
+  }
+
+  constructor() {
+    this.dataSource.filterPredicate = this.createFilterPredicate();
+
+    // Keep the Material table in sync with the reactive employee list.
+    effect(() => {
+      this.dataSource.data = this.employeeList();
+    });
+  }
 
   ngOnInit(): void {
     this.loadEmployees();
   }
 
-  ngAfterViewInit(): void {
-    this.dataSource.sort = this.resultSort;
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.filterPredicate = (employee: Employee, filter: string) => {
+  applyQuickFilter(event: Event): void {
+    this.dataSource.filter = (event.target as HTMLInputElement).value.trim().toLowerCase();
+    this.dataSource.paginator?.firstPage();
+  }
+
+  updateCriteria(field: keyof StaffSearchCriteria, value: string): void {
+    this.searchCriteria.update((criteria) => ({ ...criteria, [field]: value }));
+  }
+
+  reset(): void {
+    this.searchCriteria.set({ ...EMPTY_SEARCH_CRITERIA });
+    this.dataSource.filter = '';
+    this.loadEmployees();
+  }
+
+  onSubmit(): void {
+    this.loadEmployees();
+  }
+
+  private loadEmployees(): void {
+    this.isLoading.set(true);
+    this.hasError.set(false);
+
+    this.employeeService
+      .search(this.searchCriteria())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (employees) => {
+          this.employeeList.set(employees);
+          this.hasLoaded.set(true);
+          this.dataSource.paginator?.firstPage();
+          this.isLoading.set(false);
+        },
+        error: () => {
+          this.employeeList.set([]);
+          this.hasLoaded.set(false);
+          this.hasError.set(true);
+          this.isLoading.set(false);
+        }
+      });
+  }
+
+  private createFilterPredicate() {
+    return (employee: Employee, filter: string): boolean => {
       const normalizedFilter = filter.trim().toLowerCase();
       if (!normalizedFilter) {
         return true;
@@ -82,86 +135,11 @@ export class SearchResultComponent implements OnInit {
         employee.phone,
         employee.extension
       ]
-        .filter(Boolean)
+        .filter((value): value is string => !!value)
         .join(' ')
         .toLowerCase();
 
       return searchableText.includes(normalizedFilter);
     };
   }
-
-  get hasActiveFilters(): boolean {
-    return Object.values(this.searchCriteria).some((value) => value.trim().length > 0);
-  }
-
-  applyFilter(event: Event): void {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.currentFilterValue = filterValue;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
-
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
-    }
-  }
-
-  clearFilter(): void {
-    this.searchCriteria = {
-      firstName: '',
-      lastName: '',
-      jobTitle: '',
-      department: '',
-      location: ''
-    };
-    this.currentFilterValue = '';
-    this.dataSource.filter = '';
-    this.loadEmployees();
-  }
-
-  onSubmit(): void {
-    this.loadEmployees();
-  }
-
-  private loadEmployees(): void {
-    this.isLoading = true;
-    this.errorMessage = null;
-
-    const request$ = this.hasActiveFilters
-      ? this.service.findEmployees(this.searchCriteria)
-      : this.service.getAllEmployees();
-
-    request$.pipe(
-      tap((data) => {
-        this.employeeList = [...data];
-        this.totalCount = data.length;
-        this.hasLoaded = true;
-        this.syncDataSource();
-      }),
-      catchError(() => {
-        this.errorMessage = 'We could not fetch the staff directory right now.';
-        this.employeeList = [];
-        this.totalCount = 0;
-        this.hasLoaded = false;
-        this.syncDataSource();
-        return of([]);
-      }),
-      finalize(() => {
-        this.isLoading = false;
-      })
-    ).subscribe();
-  }
-
-  private syncDataSource(): void {
-    this.dataSource.data = this.employeeList;
-    this.dataSource.filter = this.currentFilterValue.trim().toLowerCase();
-
-    if (this.paginator) {
-      this.paginator.firstPage();
-      this.dataSource.paginator = this.paginator;
-    }
-
-    if (this.resultSort) {
-      this.dataSource.sort = this.resultSort;
-    }
-  }
 }
-

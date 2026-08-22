@@ -1,17 +1,12 @@
-import { Component, OnInit } from '@angular/core';
-import { MatDialogModule } from '@angular/material/dialog';
+import { Component, inject } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-helpdialog',
-  standalone: true,
-  imports: [MatDialogModule],
+  imports: [MatButtonModule, MatDialogModule],
   templateUrl: './helpdialog.component.html'
 })
-export class HelpdialogComponent implements OnInit {
-
-  constructor() { }
-
-  ngOnInit(): void {
-  }
-
+export class HelpdialogComponent {
+  protected readonly dialogRef = inject(MatDialogRef<HelpdialogComponent>);
 }

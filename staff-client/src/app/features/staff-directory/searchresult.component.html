@@ -10,48 +10,52 @@
         <div class="search-fields-container">
           <mat-form-field appearance="outline">
             <mat-label>First Name</mat-label>
-            <input matInput name="firstName" [(ngModel)]="searchCriteria.firstName">
+            <input matInput name="firstName" [ngModel]="searchCriteria().firstName" (ngModelChange)="updateCriteria('firstName', $event)" />
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Last Name</mat-label>
-            <input matInput name="lastName" [(ngModel)]="searchCriteria.lastName">
+            <input matInput name="lastName" [ngModel]="searchCriteria().lastName" (ngModelChange)="updateCriteria('lastName', $event)" />
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Job Title</mat-label>
-            <input matInput name="jobTitle" [(ngModel)]="searchCriteria.jobTitle">
+            <input matInput name="jobTitle" [ngModel]="searchCriteria().jobTitle" (ngModelChange)="updateCriteria('jobTitle', $event)" />
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Department</mat-label>
-            <mat-select name="department" [(ngModel)]="searchCriteria.department">
+            <mat-select name="department" [ngModel]="searchCriteria().department" (ngModelChange)="updateCriteria('department', $event)">
               <mat-option value="">All Departments</mat-option>
-              <mat-option *ngFor="let department of departments" [value]="department">{{ department }}</mat-option>
+              @for (department of departments; track department) {
+                <mat-option [value]="department">{{ department }}</mat-option>
+              }
             </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Location</mat-label>
-            <mat-select name="location" [(ngModel)]="searchCriteria.location">
+            <mat-select name="location" [ngModel]="searchCriteria().location" (ngModelChange)="updateCriteria('location', $event)">
               <mat-option value="">All Locations</mat-option>
-              <mat-option *ngFor="let location of locations" [value]="location">{{ location }}</mat-option>
+              @for (location of locations; track location) {
+                <mat-option [value]="location">{{ location }}</mat-option>
+              }
             </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Quick Filter</mat-label>
-            <input matInput (keyup)="applyFilter($event)" [value]="currentFilterValue">
+            <input matInput (keyup)="applyQuickFilter($event)" />
             <mat-icon matSuffix>search</mat-icon>
           </mat-form-field>
         </div>
 
         <div class="button-container">
-          <button mat-raised-button color="primary" type="submit">
+          <button mat-raised-button color="primary" type="submit" [disabled]="isLoading()">
             <mat-icon>search</mat-icon>
             Search
           </button>
-          <button mat-stroked-button type="button" (click)="clearFilter()">
+          <button mat-stroked-button type="button" (click)="reset()">
             <mat-icon>refresh</mat-icon>
             Reset
           </button>
@@ -61,17 +65,25 @@
   </section>
 
   <section class="resulttable" aria-label="Staff directory results">
-    <div class="table-toolbar" *ngIf="hasLoaded || isLoading || errorMessage">
-      <div class="summary">
-        <strong>{{ totalCount }} records</strong>
-        <span *ngIf="hasActiveFilters">with active filters</span>
+    @if (hasLoaded() || isLoading() || hasError()) {
+      <div class="table-toolbar">
+        <div class="summary">
+          <strong>{{ employeeList().length }} records</strong>
+          @if (hasActiveFilters()) {
+            <span>with active filters</span>
+          }
+        </div>
+        <div class="status-pill" [class.loading]="isLoading()" [class.error]="hasError()">
+          @if (isLoading()) {
+            <span>Loading directory…</span>
+          } @else if (hasError()) {
+            <span>{{ errorText }}</span>
+          } @else {
+            <span>Ready</span>
+          }
+        </div>
       </div>
-      <div class="status-pill" [class.loading]="isLoading" [class.error]="errorMessage">
-        <ng-container *ngIf="isLoading">Loading directory…</ng-container>
-        <ng-container *ngIf="errorMessage && !isLoading">{{ errorMessage }}</ng-container>
-        <ng-container *ngIf="!isLoading && !errorMessage && hasLoaded">Ready</ng-container>
-      </div>
-    </div>
+    }
 
     <div class="table-card">
       <table mat-table [dataSource]="dataSource" matSort>
@@ -108,10 +120,10 @@
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
       </table>
 
-      <mat-paginator [pageSizeOptions]="pageSizes" [pageSize]="50" showFirstLastButtons aria-label="Records per page"></mat-paginator>
+      <mat-paginator [pageSizeOptions]="pageSizes" [pageSize]="defaultPageSize" showFirstLastButtons aria-label="Records per page"></mat-paginator>
     </div>
   </section>
 </div>

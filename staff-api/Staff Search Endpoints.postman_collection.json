@@ -14,139 +14,109 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5208/employee",
+					"raw": "http://localhost:51828/api/employees",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
-					"port": "5208",
+					"port": "51828",
 					"path": [
-						"employee"
+						"api",
+						"employees"
 					]
 				}
 			},
 			"response": []
 		},
 		{
-			"name": "Search Result",
+			"name": "Search Employees",
 			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"firstname\":\"\",\r\n    \"lastName\":\"\",\r\n    \"Division\":\"Executive Office\",\r\n    \"Department\":\"\",\r\n    \"Location\":\"\",\r\n    \"Union\":\"\",\r\n    \"jobTitle\":\"\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
+				"auth": {
+					"type": "noauth"
 				},
-				"url": {
-					"raw": "http://localhost:5208/employee/filter",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "5208",
-					"path": [
-						"employee",
-						"filter"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Test Server Endpoint",
-			"request": {
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://chltestwebapp1/staffsearch/employee",
-					"protocol": "http",
-					"host": [
-						"chltestwebapp1"
-					],
-					"path": [
-						"staffsearch",
-						"employee"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Local IIS Endpoint",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"firstname\":\"\",\r\n    \"lastName\":\"\",\r\n    \"Division\":\"Executive Office\",\r\n    \"Department\":\"\",\r\n    \"Location\":\"\",\r\n    \"Union\":\"\",\r\n    \"jobTitle\":\"\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost/staffsearch/employee/filter",
+					"raw": "http://localhost:51828/api/employees?firstName=ra&department=Engineering",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
+					"port": "51828",
 					"path": [
-						"staffsearch",
-						"employee",
-						"filter"
+						"api",
+						"employees"
+					],
+					"query": [
+						{
+							"key": "firstName",
+							"value": "ra"
+						},
+						{
+							"key": "lastName",
+							"value": "",
+							"disabled": true
+						},
+						{
+							"key": "jobTitle",
+							"value": "",
+							"disabled": true
+						},
+						{
+							"key": "department",
+							"value": "Engineering"
+						},
+						{
+							"key": "location",
+							"value": "",
+							"disabled": true
+						}
 					]
 				}
 			},
 			"response": []
 		},
 		{
-			"name": "Local IIS Endpoint",
+			"name": "Get Employee By Id",
 			"request": {
+				"auth": {
+					"type": "noauth"
+				},
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost/staffsearch/employee",
+					"raw": "http://localhost:51828/api/employees/e1a2b3c4-0005-4000-8000-000000000005",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
+					"port": "51828",
 					"path": [
-						"staffsearch",
-						"employee"
+						"api",
+						"employees",
+						"e1a2b3c4-0005-4000-8000-000000000005"
 					]
 				}
 			},
 			"response": []
 		},
 		{
-			"name": "Test Server Filter",
+			"name": "Health Check",
 			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"firstname\":\"\",\r\n    \"lastName\":\"farmer\",\r\n    \"Division\":\"\",\r\n    \"Department\":\"\",\r\n    \"Location\":\"\",\r\n    \"Union\":\"\",\r\n    \"jobTitle\":\"\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
+				"auth": {
+					"type": "noauth"
 				},
+				"method": "GET",
+				"header": [],
 				"url": {
-					"raw": "http://chltestwebapp1/staffsearch/employee/filter",
+					"raw": "http://localhost:51828/health",
 					"protocol": "http",
 					"host": [
-						"chltestwebapp1"
+						"localhost"
 					],
+					"port": "51828",
 					"path": [
-						"staffsearch",
-						"employee",
-						"filter"
+						"health"
 					]
 				}
 			},

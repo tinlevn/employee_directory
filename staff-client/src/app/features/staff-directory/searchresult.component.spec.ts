@@ -1,34 +1,41 @@
-import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { provideZonelessChangeDetection } from '@angular/core';
+import { of, throwError } from 'rxjs';
 
+import { Employee } from '../../core/models/employee.model';
 import { EmployeeService } from '../../core/services/employee.service';
 import { SearchResultComponent } from './searchresult.component';
 
-describe('SearchresultComponent', () => {
+const testEmployees: Employee[] = [
+  {
+    id: '1',
+    firstName: 'Ada',
+    lastName: 'Lovelace',
+    title: 'Engineer',
+    extension: '1234',
+    phone: '555-0100',
+    location: 'Chelsea',
+    department: 'Engineering',
+    email: 'ada@example.com',
+    hiredDate: '2019-04-12T00:00:00'
+  }
+];
+
+describe('SearchResultComponent', () => {
   let component: SearchResultComponent;
   let fixture: ComponentFixture<SearchResultComponent>;
   let employeeService: jasmine.SpyObj<EmployeeService>;
 
   beforeEach(async () => {
-    employeeService = jasmine.createSpyObj<EmployeeService>('EmployeeService', ['getAllEmployees', 'findEmployees']);
-    employeeService.getAllEmployees.and.returnValue(of([
-      {
-        firstName: 'Ada',
-        lastName: 'Lovelace',
-        title: 'Engineer',
-        extension: '1234',
-        phone: '555-0100',
-        location: 'Chelsea',
-        department: 'Engineering',
-        email: 'ada@example.com'
-      }
-    ]));
+    employeeService = jasmine.createSpyObj<EmployeeService>('EmployeeService', ['search', 'getById']);
+    employeeService.search.and.returnValue(of(testEmployees));
 
     await TestBed.configureTestingModule({
-      declarations: [SearchResultComponent],
-      providers: [{ provide: EmployeeService, useValue: employeeService }],
-      schemas: [NO_ERRORS_SCHEMA]
+      imports: [SearchResultComponent],
+      providers: [
+        provideZonelessChangeDetection(),
+        { provide: EmployeeService, useValue: employeeService }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(SearchResultComponent);
@@ -40,12 +47,38 @@ describe('SearchresultComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should load employees and mark the directory as ready', () => {
+  it('should load employees on init and mark the directory as ready', () => {
+    expect(employeeService.search).toHaveBeenCalledWith(component.searchCriteria());
+    expect(component.employeeList().length).toBe(1);
+    expect(component.hasLoaded()).toBeTrue();
+    expect(component.hasError()).toBeFalse();
+  });
+
+  it('should expose an error state when the search fails', () => {
+    employeeService.search.and.returnValue(throwError(() => new Error('boom')));
+
     component.onSubmit();
 
-    expect(employeeService.getAllEmployees).toHaveBeenCalled();
-    expect(component.hasLoaded).toBeTrue();
-    expect(component.errorMessage).toBeNull();
-    expect(component.employeeList.length).toBe(1);
+    expect(component.hasError()).toBeTrue();
+    expect(component.hasLoaded()).toBeFalse();
+    expect(component.employeeList().length).toBe(0);
+  });
+
+  it('should report active filters only when a criterion has a value', () => {
+    expect(component.hasActiveFilters()).toBeFalse();
+
+    component.updateCriteria('department', 'Engineering');
+
+    expect(component.hasActiveFilters()).toBeTrue();
+  });
+
+  it('should reset criteria and reload', () => {
+    component.updateCriteria('firstName', 'Ada');
+    employeeService.search.calls.reset();
+
+    component.reset();
+
+    expect(component.searchCriteria().firstName).toBe('');
+    expect(employeeService.search).toHaveBeenCalled();
   });
 });

@@ -4,8 +4,8 @@
 
   <div class="toolbar-actions">
     <div class="theme-toggle-wrapper" (click)="toggleDarkMode()" role="button" tabindex="0" (keydown.enter)="toggleDarkMode()" (keydown.space)="toggleDarkMode()">
-      <mat-icon class="theme-icon">{{ (isDarkMode$ | async) ? 'dark_mode' : 'light_mode' }}</mat-icon>
-      <span class="theme-label">{{ (isDarkMode$ | async) ? 'Dark' : 'Light' }}</span>
+      <mat-icon class="theme-icon">{{ (isDarkMode() ? 'dark_mode' : 'light_mode') }}</mat-icon>
+      <span class="theme-label">{{ isDarkMode() ? 'Dark' : 'Light' }}</span>
     </div>
 
     <button mat-stroked-button color="primary" (click)="openHelp()">Help</button>

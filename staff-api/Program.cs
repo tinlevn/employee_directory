@@ -1,63 +1,57 @@
-using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.EntityFrameworkCore;
-using Staff_Search.Data;
-using Staff_Search.Data.Repository;
-using Staff_Search.Interface;
+using StaffSearch.Data;
+using StaffSearch.Data.Repositories;
+using StaffSearch.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllers();
+const string CorsPolicy = "StaffSearchClient";
 
-builder.Services.AddDbContext<staffContext>(options =>
-{
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddControllers();
+builder.Services.AddProblemDetails();
+
+builder.Services.AddDbContext<StaffSearchDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 
-builder.Services.AddCors(opt =>
-    opt.AddPolicy("CorsPolicy", policy =>
-    {
-        /*For Production
-        policy.AllowAnyHeader()
-        .WithMethods("POST")
-        .AllowCredentials();
-        */
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<StaffSearchDbContext>("database");
 
-        //For testing
-        policy.WithOrigins("http://localhost:4200")
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowCredentials();
-    })
-);
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
+
+builder.Services.AddCors(options =>
+    options.AddPolicy(CorsPolicy, policy =>
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyHeader()
+              .WithMethods("GET")));
 
 var app = builder.Build();
-using var scope = app.Services.CreateScope();
-var services = scope.ServiceProvider;
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    app.UseExceptionHandler();
+    app.UseHsts();
+    app.UseHttpsRedirection();
+}
 
-app.UseSwagger();
-app.UseSwaggerUI();
+app.UseStatusCodePages();
 
-//app.UseHttpsRedirection();
+app.UseCors(CorsPolicy);
 
-app.UseCors("CorsPolicy");
-
-//app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();

@@ -1,45 +1,37 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { Employee, StaffSearchCriteria } from '../models/employee.model';
-import { mockEmployees } from '../../features/staff-directory/mock-employees';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class EmployeeService {
+  private readonly http = inject(HttpClient);
   private readonly baseUrl = environment.apiUrl;
 
-  constructor(private readonly http: HttpClient) {}
-
-  findEmployees(criteria: StaffSearchCriteria): Observable<Employee[]> {
-    return this.http.post<Employee[]>(`${this.baseUrl}/filter`, criteria, {
-      withCredentials: true
-    }).pipe(
-      catchError(() => of(this.filterMockEmployees(criteria)))
-    );
+  /**
+   * GET /api/employees with the active criteria as query-string parameters.
+   * Blank criteria are omitted, so an empty form returns the full directory.
+   */
+  search(criteria: StaffSearchCriteria): Observable<Employee[]> {
+    return this.http.get<Employee[]>(this.baseUrl, { params: this.toParams(criteria) });
   }
 
-  getAllEmployees(): Observable<Employee[]> {
-    return this.http.get<Employee[]>(this.baseUrl, {
-      withCredentials: true
-    }).pipe(
-      catchError(() => of(mockEmployees))
-    );
+  getById(id: string): Observable<Employee> {
+    return this.http.get<Employee>(`${this.baseUrl}/${encodeURIComponent(id)}`);
   }
 
-  private filterMockEmployees(criteria: StaffSearchCriteria): Employee[] {
-    return mockEmployees.filter((employee) => {
-      const matchesFirstName = !criteria.firstName || employee.firstName.toLowerCase().includes(criteria.firstName.toLowerCase());
-      const matchesLastName = !criteria.lastName || employee.lastName.toLowerCase().includes(criteria.lastName.toLowerCase());
-      const matchesJobTitle = !criteria.jobTitle || employee.title.toLowerCase().includes(criteria.jobTitle.toLowerCase());
-      const matchesDepartment = !criteria.department || employee.department.toLowerCase() === criteria.department.toLowerCase();
-      const matchesLocation = !criteria.location || employee.location.toLowerCase() === criteria.location.toLowerCase();
+  private toParams(criteria: StaffSearchCriteria): HttpParams {
+    let params = new HttpParams();
 
-      return matchesFirstName && matchesLastName && matchesJobTitle && matchesDepartment && matchesLocation;
-    });
+    for (const [key, value] of Object.entries(criteria)) {
+      const trimmed = value.trim();
+      if (trimmed) {
+        params = params.set(key, trimmed);
+      }
+    }
+
+    return params;
   }
 }
