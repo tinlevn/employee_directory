@@ -81,4 +81,17 @@ describe('SearchResultComponent', () => {
     expect(component.searchCriteria().firstName).toBe('');
     expect(employeeService.search).toHaveBeenCalled();
   });
+
+  it('should quick-filter across the searchable employee fields', () => {
+    const predicate = component.dataSource.filterPredicate;
+    const employee = testEmployees[0];
+
+    expect(predicate(employee, '')).toBeTrue();
+    expect(predicate(employee, '  ')).toBeTrue();
+    expect(predicate(employee, 'lovelace')).toBeTrue();
+    expect(predicate(employee, 'ENGINEER')).toBeTrue();
+    expect(predicate(employee, 'chelsea')).toBeTrue();
+    expect(predicate(employee, '555-0100')).toBeTrue();
+    expect(predicate(employee, 'nonexistent')).toBeFalse();
+  });
 });

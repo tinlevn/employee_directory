@@ -37,6 +37,14 @@ dotnet ef database update           # creates/updates the LocalDB agu_staff data
 dotnet run                          # http://localhost:51828 / https://localhost:51827
 ```
 
+## Tests
+
+The `tests/StaffSearch.Tests` project (xUnit) covers the repository filter logic against EF Core InMemory, the entity/DTO mapping, and full API integration tests via `WebApplicationFactory` (endpoints, validation 400s, 404s, CORS headers, health check).
+
+```powershell
+dotnet test
+```
+
 CORS origins are configured in `appsettings.json` under `Cors:AllowedOrigins` (Angular dev server: `http://localhost:4200`).
 
 ## Frontend

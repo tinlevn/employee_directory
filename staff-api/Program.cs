@@ -10,8 +10,13 @@ const string CorsPolicy = "StaffSearchClient";
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 
-builder.Services.AddDbContext<StaffSearchDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Integration tests run the host in the "Test" environment and register their
+// own in-memory provider; production/development always use SQL Server.
+if (!builder.Environment.IsEnvironment("Test"))
+{
+    builder.Services.AddDbContext<StaffSearchDbContext>(options =>
+        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+}
 
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 
@@ -55,3 +60,6 @@ app.MapControllers();
 app.MapHealthChecks("/health");
 
 app.Run();
+
+// Exposes the implicit Program class to the integration-test project.
+public partial class Program { }

@@ -17,13 +17,13 @@ export class NavbarComponent {
   private readonly themeService = inject(ThemeService);
   private readonly dialog = inject(MatDialog);
 
-  protected readonly isDarkMode = this.themeService.isDarkMode;
+  readonly isDarkMode = this.themeService.isDarkMode;
 
-  protected toggleDarkMode(): void {
+  toggleDarkMode(): void {
     this.themeService.toggleDarkMode();
   }
 
-  protected openHelp(): void {
+  openHelp(): void {
     this.dialog.open(HelpdialogComponent);
   }
 }
