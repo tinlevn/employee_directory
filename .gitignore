@@ -64,3 +64,8 @@ Thumbs.db
 *.vsp
 *.vspx
 
+# Local secrets
+.env
+.env.*
+!.env.example
+

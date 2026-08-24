@@ -1,0 +1,90 @@
+openapi: 3.0.3
+info:
+  title: Employee Directory API
+  version: 1.0.0
+  description: Employee directory, employment history, events, transfers, and analytics.
+servers:
+  - url: http://localhost:8080/api/v1
+paths:
+  /persons:
+    get:
+      summary: List active persons
+      parameters:
+        - {name: q, in: query, schema: {type: string}}
+        - {name: department, in: query, schema: {type: string}}
+        - {name: page, in: query, schema: {type: integer, minimum: 1, default: 1}}
+        - {name: page_size, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 20}}
+        - {name: sort, in: query, schema: {type: string, enum: [last_name, -last_name, first_name, -first_name, hire_date, -hire_date, created_at, -created_at]}}
+      responses:
+        '200': {description: Paginated persons}
+    post:
+      summary: Create a person
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/CreatePerson'}}}}
+      responses: {'201': {description: Created}, '400': {description: Validation failure}}
+  /persons/{id}:
+    parameters: [{name: id, in: path, required: true, schema: {type: string, format: uuid}}]
+    get: {summary: Get a person, responses: {'200': {description: Person}, '404': {description: Not found}}}
+    patch:
+      summary: Update a person
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/UpdatePerson'}}}}
+      responses: {'200': {description: Updated}, '404': {description: Not found}}
+    delete: {summary: Soft-delete a person, responses: {'200': {description: Deactivated}, '404': {description: Not found}}}
+  /persons/{id}/employment:
+    parameters: [{name: id, in: path, required: true, schema: {type: string, format: uuid}}]
+    get: {summary: List employment versions, responses: {'200': {description: Employment history}}}
+    post:
+      summary: Create a versioned employment record
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/CreateEmployment'}}}}
+      responses: {'201': {description: Created}, '422': {description: Invalid organization relationship}}
+  /persons/{id}/employment/current:
+    get: {summary: Get current employment, responses: {'200': {description: Current employment}, '404': {description: Not found}}}
+  /persons/{id}/emergency-contact:
+    parameters: [{name: id, in: path, required: true, schema: {type: string, format: uuid}}]
+    get: {summary: Get optional emergency contact, responses: {'200': {description: Contact}, '404': {description: Not found}}}
+    post: {summary: Create or replace contact, responses: {'201': {description: Saved}}}
+    patch: {summary: Update contact, responses: {'200': {description: Updated}}}
+    delete: {summary: Delete contact, responses: {'200': {description: Deleted}}}
+  /persons/{id}/events:
+    parameters: [{name: id, in: path, required: true, schema: {type: string, format: uuid}}]
+    get: {summary: List immutable events, responses: {'200': {description: Event timeline}}}
+    post: {summary: Append immutable event, responses: {'201': {description: Created}}}
+  /analytics/headcount:
+    get: {summary: Current headcount by department, responses: {'200': {description: Headcount}}}
+  /analytics/attrition:
+    get: {summary: Attrition statistics, responses: {'200': {description: Attrition}}}
+  /analytics/movements:
+    get: {summary: Hires and exits over time, responses: {'200': {description: Movements}}}
+  /analytics/snapshot/{date}:
+    get: {summary: Point-in-time headcount, responses: {'200': {description: Snapshot}}}
+components:
+  schemas:
+    CreatePerson:
+      type: object
+      required: [org_id, first_name, last_name]
+      properties:
+        org_id: {type: string, format: uuid}
+        first_name: {type: string, maxLength: 100}
+        middle_name: {type: string, nullable: true}
+        last_name: {type: string, maxLength: 100}
+        preferred_name: {type: string, nullable: true}
+        date_of_birth: {type: string, format: date, nullable: true}
+        gender: {type: string, enum: [male, female, non-binary, prefer-not-to-say]}
+        personal_email: {type: string, format: email}
+        org_email: {type: string, format: email}
+        phone_primary: {type: string}
+        city: {type: string}
+        country: {type: string}
+        tags: {type: array, items: {type: string}}
+    UpdatePerson:
+      allOf: [{$ref: '#/components/schemas/CreatePerson'}]
+    CreateEmployment:
+      type: object
+      required: [org_id, valid_from]
+      properties:
+        org_id: {type: string, format: uuid}
+        employee_id: {type: string}
+        job_title: {type: string}
+        department: {type: string}
+        team: {type: string}
+        office_location: {type: string}
+        valid_from: {type: string, format: date}

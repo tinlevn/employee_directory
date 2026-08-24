@@ -1,0 +1,11 @@
+---
+import Layout from "../layouts/Layout.astro";
+import PersonDetail from "../components/PersonDetail.tsx";
+---
+
+<Layout title="Employee — Employee Directory">
+  <a href="/" class="text-sm text-zinc-500 hover:underline">← Back to directory</a>
+  <div id="person-detail" class="mt-6">
+    <PersonDetail client:load />
+  </div>
+</Layout>
