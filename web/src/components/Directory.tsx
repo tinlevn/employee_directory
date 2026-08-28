@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { api, type Person } from "../lib/api";
+import PersonHoverCard from "./PersonHoverCard";
+
+const HOVER_OPEN_MS = 150;
+const HOVER_CLOSE_MS = 150;
 
 function readURL() {
   if (typeof window === "undefined") return { q: "", department: "", page: 1, pageSize: 20 };
@@ -34,6 +38,63 @@ export default function Directory() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const requestVersion = useRef(0);
+  const [hover, setHover] = useState<{ id: string; rect: DOMRect } | null>(null);
+  const openTimer = useRef<number | null>(null);
+  const closeTimer = useRef<number | null>(null);
+
+  function clearHoverTimers() {
+    if (openTimer.current !== null) {
+      clearTimeout(openTimer.current);
+      openTimer.current = null;
+    }
+    if (closeTimer.current !== null) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  }
+
+function InfoIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-3.5 w-3.5">
+      <circle cx="8" cy="8" r="6.5" />
+      <path d="M8 7.5v3.5" strokeLinecap="round" />
+      <circle cx="8" cy="5" r="0.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function onAnchorEnter(e: React.SyntheticEvent<HTMLElement>, id: string) {
+  clearHoverTimers();
+  const rect = e.currentTarget.getBoundingClientRect();
+  openTimer.current = window.setTimeout(() => setHover({ id, rect }), HOVER_OPEN_MS);
+}
+
+function onAnchorLeave() {
+  clearHoverTimers();
+  closeTimer.current = window.setTimeout(() => setHover(null), HOVER_CLOSE_MS);
+}
+
+function onCardEnter() {
+  clearHoverTimers();
+}
+
+function onCardLeave() {
+  clearHoverTimers();
+  closeTimer.current = window.setTimeout(() => setHover(null), HOVER_CLOSE_MS);
+}
+
+  useEffect(() => {
+    if (!hover) return;
+    const close = () => setHover(null);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [hover !== null]);
+
+  useEffect(() => () => clearHoverTimers(), []);
 
   async function load(targetPage = page, targetPageSize = pageSize, qVal = q, deptVal = department, push = true) {
     const version = ++requestVersion.current;
@@ -153,12 +214,28 @@ export default function Directory() {
           </thead>
           <tbody>
             {persons.map((p, idx) => (
-              <tr key={p.id} className={`border-t ${idx % 2 === 0 ? "bg-white" : "bg-zinc-50/70"} hover:bg-zinc-100/70`}>
+              <tr
+                key={p.id}
+                className={`border-t ${idx % 2 === 0 ? "bg-white" : "bg-zinc-50/70"} hover:bg-zinc-100/70`}
+              >
                 <td className="px-4 py-3 font-medium">
-                  <a href={`/person?id=${encodeURIComponent(p.id)}`} className="hover:underline">
-                    {p.first_name} {p.last_name}
-                  </a>
-                  {p.preferred_name && <span className="ml-2 text-zinc-500">({p.preferred_name})</span>}
+                  <span className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      aria-label={`Show details for ${p.first_name} ${p.last_name}`}
+                      onMouseEnter={(e) => onAnchorEnter(e, p.id)}
+                      onMouseLeave={onAnchorLeave}
+                      onFocus={(e) => onAnchorEnter(e, p.id)}
+                      onBlur={onAnchorLeave}
+                      className="shrink-0 rounded p-0.5 text-zinc-400 transition-colors hover:bg-zinc-200 hover:text-zinc-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500"
+                    >
+                      <InfoIcon />
+                    </button>
+                    <a href={`/person?id=${encodeURIComponent(p.id)}`} className="truncate hover:underline">
+                      {p.first_name} {p.last_name}
+                    </a>
+                    {p.preferred_name && <span className="shrink-0 text-zinc-500">({p.preferred_name})</span>}
+                  </span>
                 </td>
                 <td className="px-4 py-3 text-zinc-700">{p.current_job_title || "—"}</td>
                 <td className="px-4 py-3">
@@ -220,6 +297,16 @@ export default function Directory() {
           </button>
         </div>
       </div>
+
+      {hover && persons.some((p) => p.id === hover.id) && (
+        <PersonHoverCard
+          personId={hover.id}
+          fallback={persons.find((p) => p.id === hover.id)!}
+          anchorRect={hover.rect}
+          onEnter={onCardEnter}
+          onLeave={onCardLeave}
+        />
+      )}
     </div>
   );
 }
