@@ -19,6 +19,57 @@ type PersonRepository struct {
 
 func NewPersonRepository(pool *pgxpool.Pool) *PersonRepository { return &PersonRepository{pool: pool} }
 
+func (r *PersonRepository) GetOrgChart(ctx context.Context, orgID uuid.UUID) ([]domain.OrgChartNode, error) {
+	q := `
+		SELECT
+			p.id,
+			p.first_name,
+			p.middle_name,
+			p.last_name,
+			e.job_title,
+			e.department,
+			p.profile_photo_url,
+			e.reports_to
+		FROM persons p
+		JOIN employment_records e ON e.person_id = p.id AND e.is_current = true
+		WHERE p.org_id = $1 AND p.is_active = true
+	`
+	rows, err := r.pool.Query(ctx, q, orgID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var nodes []domain.OrgChartNode
+	for rows.Next() {
+		var n domain.OrgChartNode
+		var fname, lname string
+		var mname *string
+
+		if err := rows.Scan(&n.ID, &fname, &mname, &lname, &n.JobTitle, &n.Department, &n.ProfilePhotoURL, &n.ReportsTo); err != nil {
+			return nil, err
+		}
+
+		if mname != nil && *mname != "" {
+			n.Name = fname + " " + *mname + " " + lname
+		} else {
+			n.Name = fname + " " + lname
+		}
+
+		nodes = append(nodes, n)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if nodes == nil {
+		nodes = []domain.OrgChartNode{}
+	}
+
+	return nodes, nil
+}
+
 func (r *PersonRepository) Create(ctx context.Context, p *domain.Person) error {
 	_, err := r.pool.Exec(ctx, `
 		INSERT INTO persons (id, org_id, first_name, middle_name, last_name, preferred_name, date_of_birth, gender, profile_photo_url, personal_email, org_email, phone_primary, address_line_1, address_line_2, city, state_province, postal_code, country, is_international, source, notes, tags)

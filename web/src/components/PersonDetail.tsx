@@ -45,10 +45,21 @@ export default function PersonDetail({ id }: Props) {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-lg border bg-white p-6">
-        <h1 className="text-xl font-semibold">{person.first_name} {person.last_name}</h1>
-        <p className="mt-1 text-sm text-zinc-600">{employment?.job_title || "No position"} · {employment?.department || "No department"}</p>
-        <div className="mt-5 grid gap-4 text-sm sm:grid-cols-2">
+      <section className="rounded-lg border bg-white p-6 border-t-4 border-t-emerald-500 shadow-sm">
+        <div className="flex items-center gap-4">
+            {person.profile_photo_url ? (
+                <img src={person.profile_photo_url} alt={`${person.first_name} ${person.last_name}`} className="w-16 h-16 rounded-full object-cover border border-zinc-200" width="64" height="64" />
+            ) : (
+                <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-800 font-semibold text-xl border border-emerald-200">
+                    {person.first_name.charAt(0)}{person.last_name.charAt(0)}
+                </div>
+            )}
+            <div>
+                <h1 className="text-xl font-semibold text-zinc-900">{person.first_name} {person.last_name}</h1>
+                <p className="mt-1 text-sm text-zinc-600">{employment?.job_title || "No position"} · {employment?.department || "No department"}</p>
+            </div>
+        </div>
+        <div className="mt-6 grid gap-4 text-sm sm:grid-cols-2">
           <div><span className="text-zinc-500">Organization email</span><p>{person.org_email || "—"}</p></div>
           <div><span className="text-zinc-500">Phone</span><p>{person.phone_primary || "—"}</p></div>
           <div><span className="text-zinc-500">Location</span><p>{person.city || "—"}{person.country ? `, ${person.country}` : ""}</p></div>
@@ -79,11 +90,11 @@ export default function PersonDetail({ id }: Props) {
       <section className="rounded-lg border bg-white p-6">
         <h2 className="font-medium">Event timeline</h2>
         {events.length ? (
-          <div className="mt-4 divide-y">
+          <div className="mt-4 divide-y divide-zinc-100 border rounded-md">
             {events.map((event) => (
-              <div key={event.id} className="flex flex-wrap justify-between gap-2 py-3 text-sm">
-                <span className="font-medium">{event.event_type}</span>
-                <span className="text-zinc-500">{event.effective_date.slice(0, 10)}</span>
+              <div key={event.id} className="flex flex-wrap justify-between gap-2 px-4 py-3 text-sm hover:bg-emerald-50/50 transition-colors">
+                <span className="font-medium text-zinc-700">{event.event_type}</span>
+                <span className="text-zinc-500 bg-zinc-100 px-2 rounded-md">{event.effective_date.slice(0, 10)}</span>
               </div>
             ))}
           </div>
