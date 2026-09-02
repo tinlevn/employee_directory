@@ -181,7 +181,7 @@ function onCardLeave() {
           placeholder="Department (Engineering, Finance...)"
           className="w-64 rounded-md border px-3 py-2 text-sm"
         />
-        <button onClick={onSearch} className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
+        <button onClick={onSearch} className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors">
           Search
         </button>
         <span className="self-center text-sm text-zinc-500">
@@ -216,7 +216,7 @@ function onCardLeave() {
             {persons.map((p, idx) => (
               <tr
                 key={p.id}
-                className={`border-t ${idx % 2 === 0 ? "bg-white" : "bg-zinc-50/70"} hover:bg-zinc-100/70`}
+                className={`border-t ${idx % 2 === 0 ? "bg-white" : "bg-zinc-50/70"} hover:bg-emerald-50/50 transition-colors`}
               >
                 <td className="px-4 py-3 font-medium">
                   <span className="flex items-center gap-1.5">
@@ -240,7 +240,7 @@ function onCardLeave() {
                 <td className="px-4 py-3 text-zinc-700">{p.current_job_title || "—"}</td>
                 <td className="px-4 py-3">
                   {p.current_department ? (
-                    <span className="rounded-full bg-zinc-900 px-2.5 py-0.5 text-xs font-medium text-white">{p.current_department}</span>
+                    <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 border border-emerald-200">{p.current_department}</span>
                   ) : (
                     <span className="text-zinc-400">—</span>
                   )}
@@ -282,7 +282,7 @@ function onCardLeave() {
                 key={p}
                 onClick={() => goTo(p)}
                 disabled={loading}
-                className={`min-w-9 rounded-md px-3 py-1.5 text-sm ${p === page ? "bg-zinc-900 text-white" : "border hover:bg-zinc-50"}`}
+                className={`min-w-9 rounded-md px-3 py-1.5 text-sm transition-colors ${p === page ? "bg-emerald-600 text-white border-emerald-600" : "border hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200"}`}
               >
                 {p}
               </button>

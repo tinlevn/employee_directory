@@ -58,6 +58,15 @@ export interface EmploymentRecord {
   is_current: boolean;
 }
 
+export interface OrgChartNode {
+  id: string;
+  name: string;
+  job_title?: string;
+  department?: string;
+  profile_photo_url?: string;
+  reports_to?: string;
+}
+
 export interface StatusChangeEvent {
   id: string;
   person_id: string;
@@ -95,8 +104,20 @@ export interface Paginated<T> {
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
   if (init?.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+  }
+
   const res = await fetch(`${BASE}${path}`, { ...init, headers });
   if (!res.ok) {
+    if (res.status === 401 && typeof window !== "undefined" && window.location.pathname !== "/login" && window.location.pathname !== "/register") {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+      return new Promise(() => {}); // Wait for redirect
+    }
+
     let detail = "request failed";
     try {
       const body = await res.json();
@@ -131,4 +152,5 @@ export const api = {
   headcount: () => req<HeadcountRow[]>(`/api/v1/analytics/headcount`),
   movements: (fromDate: string, toDate: string) => req<MovementPoint[]>(`/api/v1/analytics/movements?from_date=${encodeURIComponent(fromDate)}&to_date=${encodeURIComponent(toDate)}`),
   health: () => req<{ status: string; database: string }>(`/health`),
+  getOrgChart: () => req<OrgChartNode[]>(`/api/v1/org-chart`),
 };
