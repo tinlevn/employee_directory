@@ -43,11 +43,11 @@ func (r *AuthRepository) GetAccountByUsername(ctx context.Context, username stri
 }
 
 func (r *AuthRepository) GetOrgIDByPersonID(ctx context.Context, personID uuid.UUID) (uuid.UUID, error) {
-    q := `SELECT org_id FROM persons WHERE id = $1`
-    var orgID uuid.UUID
-    err := r.pool.QueryRow(ctx, q, personID).Scan(&orgID)
-    if err != nil {
-        return uuid.Nil, err
-    }
-    return orgID, nil
+	q := `SELECT org_id FROM persons WHERE id = $1`
+	var orgID uuid.UUID
+	err := r.pool.QueryRow(ctx, q, personID).Scan(&orgID)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	return orgID, nil
 }
