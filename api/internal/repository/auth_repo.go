@@ -51,3 +51,8 @@ func (r *AuthRepository) GetOrgIDByPersonID(ctx context.Context, personID uuid.U
 	}
 	return orgID, nil
 }
+
+func (r *AuthRepository) UpdateLastLogin(ctx context.Context, accountID uuid.UUID) error {
+	_, err := r.pool.Exec(ctx, `UPDATE person_accounts SET last_login = now() WHERE id = $1`, accountID)
+	return err
+}

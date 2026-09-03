@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"time"
 
+	"employee-directory-api/internal/auth"
 	"employee-directory-api/internal/config"
 
 	"github.com/google/uuid"
@@ -98,6 +99,7 @@ func main() {
 		{"Grace", "Hopper", "Engineering", "grace.hopper@example.com"},
 		{"Alan", "Turing", "Data Science", "alan.turing@example.com"},
 	}
+	var adminPersonID uuid.UUID
 	for _, k := range known {
 		pid := uuid.New()
 		empID := uuid.New()
@@ -105,6 +107,18 @@ func main() {
 		mustExec(ctx, pool, `INSERT INTO persons (id, org_id, first_name, last_name, org_email, phone_primary, city, country, tags) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, pid, orgID, k.fn, k.ln, k.email, "617-555-0101", "Chelsea", "USA", []string{"seed"})
 		mustExec(ctx, pool, `INSERT INTO employment_records (id, person_id, org_id, job_title, department, team, office_location, hire_date, valid_from, is_current) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,true)`, empID, pid, orgID, "Principal Engineer", k.dept, "Platform", "Chelsea", hireDate, hireDate)
 		mustExec(ctx, pool, `INSERT INTO status_change_events (id, person_id, org_id, event_type, context, to_status, to_department, effective_date, linked_record_id, linked_record_type) VALUES ($1,$2,$3,'HIRED','employment','full-time',$4,$5,$6,'employment_record')`, uuid.New(), pid, orgID, k.dept, hireDate, empID)
+		if k.fn == "Ada" {
+			adminPersonID = pid
+		}
+	}
+	// seed a default admin account bound to Ada Lovelace (username: admin / password: admin123)
+	if adminPersonID != uuid.Nil {
+		hash, err := auth.HashPassword("admin123")
+		if err != nil {
+			log.Fatal(err)
+		}
+		mustExec(ctx, pool, `INSERT INTO person_accounts (person_id, username, password_hash, role) VALUES ($1,'admin',$2,'admin') ON CONFLICT (username) DO UPDATE SET password_hash=EXCLUDED.password_hash, role=EXCLUDED.role, is_active=true`, adminPersonID, hash)
+		fmt.Println("seeded admin account: admin / admin123")
 	}
 	mustExec(ctx, pool, `INSERT INTO headcount_snapshots (org_id, snapshot_date, department, location, active_count, new_entries, exits)
 		SELECT org_id, CURRENT_DATE, department, office_location, COUNT(*), 0, 0

@@ -33,6 +33,7 @@ func (h *PersonHandler) List(c *fiber.Ctx) error {
 	if err := h.validator.Struct(q); err != nil {
 		return err
 	}
+	q.OrgID = middleware.GetOrgID(c).String()
 	persons, total, err := h.repo.List(c.Context(), q)
 	if err != nil {
 		return middleware.RepositoryError(err)
@@ -65,7 +66,7 @@ func (h *PersonHandler) Create(c *fiber.Ctx) error {
 	if err := h.validator.Struct(req); err != nil {
 		return err
 	}
-	orgID, _ := uuid.Parse(req.OrgID)
+	orgID := middleware.GetOrgID(c)
 	p := domain.Person{
 		ID: uuid.New(), OrgID: orgID,
 		FirstName: req.FirstName, MiddleName: req.MiddleName, LastName: req.LastName,

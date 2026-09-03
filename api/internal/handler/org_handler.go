@@ -21,12 +21,14 @@ func NewOrgHandler(repo *repository.OrgRepository, v *validator.Validate) *OrgHa
 }
 
 func (h *OrgHandler) List(c *fiber.Ctx) error {
-	list, err := h.repo.List(c.Context())
+	orgID := middleware.GetOrgID(c)
+	o, err := h.repo.GetByID(c.Context(), orgID)
 	if err != nil {
 		return middleware.RepositoryError(err)
 	}
-	if list == nil {
-		list = []domain.Organization{}
+	list := []domain.Organization{}
+	if o != nil {
+		list = append(list, *o)
 	}
 	return c.JSON(list)
 }
@@ -35,6 +37,9 @@ func (h *OrgHandler) Get(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid id")
+	}
+	if id != middleware.GetOrgID(c) {
+		return fiber.NewError(fiber.StatusForbidden, "cannot access another organization")
 	}
 	o, err := h.repo.GetByID(c.Context(), id)
 	if err != nil {

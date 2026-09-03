@@ -24,7 +24,7 @@ func (p PaginationQuery) Offset() int { return (p.Page - 1) * p.PageSize }
 
 // Person — trimmed: removed ethnicity/religion/blood_type, maiden_name, pronouns, nationality, phone_secondary, linkedin_url, personal_website_url, inline emergency_contact (now separate entity), cost_center/division/business_unit (employment)
 type CreatePersonRequest struct {
-	OrgID           string   `json:"org_id" validate:"required,uuid"`
+	OrgID           string   `json:"org_id" validate:"omitempty,uuid"`
 	FirstName       string   `json:"first_name" validate:"required,min=1,max=100"`
 	MiddleName      *string  `json:"middle_name" validate:"omitempty,max=100"`
 	LastName        string   `json:"last_name" validate:"required,min=1,max=100"`
@@ -100,7 +100,7 @@ type UpdateEmergencyContactRequest struct {
 
 // Employment — trimmed: removed division, business_unit, cost_center
 type CreateEmploymentRequest struct {
-	OrgID             string   `json:"org_id" validate:"required,uuid"`
+	OrgID             string   `json:"org_id" validate:"omitempty,uuid"`
 	EmployeeID        *string  `json:"employee_id" validate:"omitempty,max=100"`
 	JobTitle          *string  `json:"job_title" validate:"omitempty,max=200"`
 	JobLevel          *string  `json:"job_level" validate:"omitempty,max=100"`
@@ -125,7 +125,7 @@ type CreateEmploymentRequest struct {
 
 // Events
 type CreateEventRequest struct {
-	OrgID          string   `json:"org_id" validate:"required,uuid"`
+	OrgID          string   `json:"org_id" validate:"omitempty,uuid"`
 	EventType      string   `json:"event_type" validate:"required,oneof=HIRED REHIRED PROMOTED DEMOTED TRANSFERRED SECONDMENT_START SECONDMENT_END SALARY_CHANGE TITLE_CHANGE RESIGNED TERMINATED LAID_OFF RETIRED ON_LEAVE_START ON_LEAVE_END CONTRACT_RENEWED CONTRACT_EXPIRED ACTIVATED DEACTIVATED RECORD_UPDATED"`
 	Context        *string  `json:"context" validate:"omitempty,oneof=employment general"`
 	FromStatus     *string  `json:"from_status" validate:"omitempty,max=100"`
@@ -156,7 +156,7 @@ type ListEventsQuery struct {
 
 // Transfers
 type CreateTransferRequest struct {
-	OrgID          string  `json:"org_id" validate:"required,uuid"`
+	OrgID          string  `json:"org_id" validate:"omitempty,uuid"`
 	TransferType   *string `json:"transfer_type" validate:"omitempty,oneof=INTERNAL INTER-CAMPUS SECONDMENT PROMOTION DEMOTION LATERAL"`
 	FromDepartment *string `json:"from_department" validate:"omitempty,max=200"`
 	ToDepartment   *string `json:"to_department" validate:"omitempty,max=200"`

@@ -58,14 +58,7 @@ export interface EmploymentRecord {
   is_current: boolean;
 }
 
-export interface OrgChartNode {
-  id: string;
-  name: string;
-  job_title?: string;
-  department?: string;
-  profile_photo_url?: string;
-  reports_to?: string;
-}
+
 
 export interface StatusChangeEvent {
   id: string;
@@ -86,12 +79,7 @@ export interface HeadcountRow {
   count: number;
 }
 
-export interface MovementPoint {
-  date: string;
-  new_entries: number;
-  exits: number;
-  net_change: number;
-}
+
 
 export interface Paginated<T> {
   data: T[];
@@ -150,7 +138,5 @@ export const api = {
     return req<Paginated<StatusChangeEvent>>(`/api/v1/persons/${id}/events${qs ? `?${qs}` : ""}`);
   },
   headcount: () => req<HeadcountRow[]>(`/api/v1/analytics/headcount`),
-  movements: (fromDate: string, toDate: string) => req<MovementPoint[]>(`/api/v1/analytics/movements?from_date=${encodeURIComponent(fromDate)}&to_date=${encodeURIComponent(toDate)}`),
   health: () => req<{ status: string; database: string }>(`/health`),
-  getOrgChart: () => req<OrgChartNode[]>(`/api/v1/org-chart`),
 };

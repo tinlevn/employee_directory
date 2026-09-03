@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"employee-directory-api/internal/auth"
 	"employee-directory-api/internal/config"
 	"employee-directory-api/internal/handler"
 	"employee-directory-api/internal/middleware"
@@ -23,6 +24,11 @@ import (
 func main() {
 	cfg := config.Load()
 	validate := validator.New(validator.WithRequiredStructEnabled())
+
+	authSvc, err := auth.NewService(cfg.JWTSecret, cfg.JWTTTL)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// DB pool is optional for dev - if DATABASE_URL not reachable, run in no-db mode for health/docs
 	var pool *pgxpool.Pool
@@ -92,6 +98,7 @@ func main() {
 		transferRepo := repository.NewTransferRepository(pool)
 		analyticsRepo := repository.NewAnalyticsRepository(pool)
 		orgRepo := repository.NewOrgRepository(pool)
+		authRepo := repository.NewAuthRepository(pool)
 
 		// handlers
 		personH := handler.NewPersonHandler(personRepo, validate)
@@ -100,53 +107,52 @@ func main() {
 		eventH := handler.NewEventHandler(eventRepo, transferRepo, validate)
 		analyticsH := handler.NewAnalyticsHandler(analyticsRepo, validate)
 		orgH := handler.NewOrgHandler(orgRepo, validate)
+		authH := handler.NewAuthHandler(authRepo, authSvc, validate)
 
-		// orgs
+		// public auth endpoints
+		api.Post("/auth/register", authH.Register)
+		api.Post("/auth/login", authH.Login)
+
+		// everything below requires a valid JWT
+		api.Use(middleware.RequireAuth(authSvc))
+
+		// orgs (read scoped to the caller's own organization)
 		api.Get("/organizations", orgH.List)
-		api.Post("/organizations", orgH.Create)
 		api.Get("/organizations/:id", orgH.Get)
 
 		// persons
 		api.Get("/persons", personH.List)
-		api.Post("/persons", personH.Create)
 		api.Get("/persons/:id", personH.Get)
-		api.Patch("/persons/:id", personH.Update)
-		api.Delete("/persons/:id", personH.Delete)
 
-		// emergency contact — separate entity, optional FK
+		// emergency contact
 		api.Get("/persons/:id/emergency-contact", emergencyH.Get)
-		api.Post("/persons/:id/emergency-contact", emergencyH.Upsert)
-		api.Patch("/persons/:id/emergency-contact", emergencyH.Update)
-		api.Delete("/persons/:id/emergency-contact", emergencyH.Delete)
 
 		// employment
 		api.Get("/persons/:id/employment", employmentH.List)
 		api.Get("/persons/:id/employment/current", employmentH.GetCurrent)
-		api.Post("/persons/:id/employment", employmentH.Create)
 
-		// events
+		// events + transfers
 		api.Get("/persons/:id/events", eventH.ListEvents)
-		api.Post("/persons/:id/events", eventH.CreateEvent)
-
-		// transfers
 		api.Get("/persons/:id/transfers", eventH.ListTransfers)
-		api.Post("/persons/:id/transfers", eventH.CreateTransfer)
 
 		// analytics
 		api.Get("/analytics/headcount", analyticsH.Headcount)
-		api.Get("/analytics/attrition", analyticsH.Attrition)
-		api.Get("/analytics/movements", analyticsH.Movements)
-		api.Get("/analytics/snapshot/:date", analyticsH.Snapshot)
 
-		// compat: keep old /api/employees -> redirect to /persons for old Angular client
-		app.Get("/api/employees", func(c *fiber.Ctx) error {
-			c.Path("/api/v1/persons")
-			return personH.List(c)
-		})
-		app.Get("/api/employees/:id", func(c *fiber.Ctx) error {
-			c.Params("id", c.Params("id"))
-			return personH.Get(c)
-		})
+		// admin-only
+		admin := api.Group("", middleware.RequireRole("admin"))
+		admin.Post("/organizations", orgH.Create)
+
+		// mutations: admin or manager
+		mut := api.Group("", middleware.RequireRole("admin", "manager"))
+		mut.Post("/persons", personH.Create)
+		mut.Patch("/persons/:id", personH.Update)
+		mut.Delete("/persons/:id", personH.Delete)
+		mut.Post("/persons/:id/emergency-contact", emergencyH.Upsert)
+		mut.Patch("/persons/:id/emergency-contact", emergencyH.Update)
+		mut.Delete("/persons/:id/emergency-contact", emergencyH.Delete)
+		mut.Post("/persons/:id/employment", employmentH.Create)
+		mut.Post("/persons/:id/events", eventH.CreateEvent)
+		mut.Post("/persons/:id/transfers", eventH.CreateTransfer)
 	} else {
 		api.All("/*", func(c *fiber.Ctx) error {
 			return fiber.NewError(fiber.StatusServiceUnavailable, "database not connected - set DATABASE_URL")

@@ -57,7 +57,7 @@ func (h *EventHandler) CreateEvent(c *fiber.Ctx) error {
 	if err := h.validator.Struct(req); err != nil {
 		return err
 	}
-	orgID, _ := uuid.Parse(req.OrgID)
+	orgID := middleware.GetOrgID(c)
 	eff, _ := time.Parse("2006-01-02", req.EffectiveDate)
 	ev := domain.StatusChangeEvent{
 		ID: uuid.New(), PersonID: pid, OrgID: orgID,
@@ -131,7 +131,7 @@ func (h *EventHandler) CreateTransfer(c *fiber.Ctx) error {
 	if err := h.validator.Struct(req); err != nil {
 		return err
 	}
-	orgID, _ := uuid.Parse(req.OrgID)
+	orgID := middleware.GetOrgID(c)
 	eff, _ := time.Parse("2006-01-02", req.EffectiveDate)
 	t := domain.TransferRecord{
 		ID: uuid.New(), PersonID: pid, OrgID: orgID,

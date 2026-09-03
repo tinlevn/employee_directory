@@ -37,6 +37,7 @@ export default function Directory() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [departments, setDepartments] = useState<string[]>([]);
   const requestVersion = useRef(0);
   const [hover, setHover] = useState<{ id: string; rect: DOMRect } | null>(null);
   const openTimer = useRef<number | null>(null);
@@ -125,6 +126,11 @@ function onCardLeave() {
     setPageSize(init.pageSize);
     load(init.page, init.pageSize, init.q, init.department, false);
 
+    // fetch departments for dropdown
+    api.headcount()
+      .then((data) => setDepartments(data.map((d) => d.department).sort()))
+      .catch(() => {});
+
     const onPop = () => {
       const s = readURL();
       setQ(s.q);
@@ -174,13 +180,18 @@ function onCardLeave() {
           placeholder="Search name / email / job title..."
           className="w-64 rounded-md border px-3 py-2 text-sm"
         />
-        <input
+        <select
           value={department}
           onChange={(e) => setDepartment(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && onSearch()}
-          placeholder="Department (Engineering, Finance...)"
           className="w-64 rounded-md border px-3 py-2 text-sm"
-        />
+        >
+          <option value="">All Departments</option>
+          {departments.map((d) => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
+        </select>
         <button onClick={onSearch} className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors">
           Search
         </button>

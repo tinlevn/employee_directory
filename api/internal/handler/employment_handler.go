@@ -66,7 +66,7 @@ func (h *EmploymentHandler) Create(c *fiber.Ctx) error {
 	if err := h.validator.Struct(req); err != nil {
 		return err
 	}
-	orgID, _ := uuid.Parse(req.OrgID)
+	orgID := middleware.GetOrgID(c)
 	validFrom, _ := time.Parse("2006-01-02", req.ValidFrom)
 	rec := domain.EmploymentRecord{
 		ID: uuid.New(), PersonID: pid, OrgID: orgID,

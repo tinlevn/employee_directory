@@ -31,14 +31,35 @@ func integrationPool(t *testing.T) *pgxpool.Pool {
 	return p
 }
 
+// newTestOrg creates an isolated organization and registers cleanup so tests are
+// self-contained and re-runnable without relying on seed data or TRUNCATE.
+func newTestOrg(t *testing.T, pool *pgxpool.Pool, name string) uuid.UUID {
+	t.Helper()
+	ctx := context.Background()
+	orgID := uuid.New()
+	requireNoError(t, NewOrgRepository(pool).Create(ctx, &domain.Organization{ID: orgID, Name: name, Type: "company"}))
+	t.Cleanup(func() {
+		// status_change_events is append-only; temporarily disable the trigger to clean up.
+		_, _ = pool.Exec(ctx, `ALTER TABLE status_change_events DISABLE TRIGGER trg_events_immutable`)
+		_, _ = pool.Exec(ctx, `DELETE FROM status_change_events WHERE org_id=$1`, orgID)
+		_, _ = pool.Exec(ctx, `ALTER TABLE status_change_events ENABLE TRIGGER trg_events_immutable`)
+
+		_, _ = pool.Exec(ctx, `DELETE FROM transfer_records WHERE org_id=$1`, orgID)
+		_, _ = pool.Exec(ctx, `DELETE FROM headcount_snapshots WHERE org_id=$1`, orgID)
+		_, _ = pool.Exec(ctx, `DELETE FROM employment_records WHERE org_id=$1`, orgID)
+		_, _ = pool.Exec(ctx, `DELETE FROM persons WHERE org_id=$1`, orgID)
+		_, _ = pool.Exec(ctx, `DELETE FROM organizations WHERE id=$1`, orgID)
+	})
+	return orgID
+}
+
 func TestPersonAndEmploymentRepositories(t *testing.T) {
 	pool := integrationPool(t)
 	ctx := context.Background()
-	orgID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
-	personID := uuid.New()
-	t.Cleanup(func() { _, _ = pool.Exec(ctx, `DELETE FROM persons WHERE id=$1`, personID) })
+	orgID := newTestOrg(t, pool, "Person Test Org")
 
 	personRepo := NewPersonRepository(pool)
+	personID := uuid.New()
 	person := &domain.Person{ID: personID, OrgID: orgID, FirstName: "Integration", LastName: "Test", IsActive: true}
 	if err := personRepo.Create(ctx, person); err != nil {
 		t.Fatalf("create person: %v", err)
@@ -87,7 +108,19 @@ func TestPersonAndEmploymentRepositories(t *testing.T) {
 func TestAnalyticsRepositories(t *testing.T) {
 	pool := integrationPool(t)
 	ctx := context.Background()
-	orgID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+	orgID := newTestOrg(t, pool, "Analytics Test Org")
+
+	personRepo := NewPersonRepository(pool)
+	empRepo := NewEmploymentRepository(pool)
+	eventRepo := NewEventRepository(pool)
+
+	personID := uuid.New()
+	requireNoError(t, personRepo.Create(ctx, &domain.Person{ID: personID, OrgID: orgID, FirstName: "Ana", LastName: "Lytics", IsActive: true}))
+	dept := "Engineering"
+	title := "Analyst"
+	requireNoError(t, empRepo.CreateVersioned(ctx, &domain.EmploymentRecord{ID: uuid.New(), PersonID: personID, OrgID: orgID, JobTitle: &title, Department: &dept, ValidFrom: time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)}))
+	requireNoError(t, eventRepo.Create(ctx, &domain.StatusChangeEvent{ID: uuid.New(), PersonID: personID, OrgID: orgID, EventType: "HIRED", Context: "employment", EffectiveDate: time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)}))
+
 	analytics := NewAnalyticsRepository(pool)
 
 	headcount, err := analytics.Headcount(ctx, &orgID)
@@ -98,7 +131,7 @@ func TestAnalyticsRepositories(t *testing.T) {
 	if err != nil || snapshot == nil || snapshot.Headcount == 0 {
 		t.Fatalf("expected point-in-time snapshot, err=%v snapshot=%#v", err, snapshot)
 	}
-	movements, err := analytics.Movements(ctx, &orgID, "2018-01-01", "2026-12-31")
+	movements, err := analytics.Movements(ctx, &orgID, "2024-01-01", "2024-12-31")
 	if err != nil || len(movements) == 0 {
 		t.Fatalf("expected movement data, err=%v rows=%d", err, len(movements))
 	}
@@ -107,51 +140,38 @@ func TestAnalyticsRepositories(t *testing.T) {
 func TestAuthRepository_Integration(t *testing.T) {
 	pool := integrationPool(t)
 	ctx := context.Background()
-
-	// Clean tables before test
-	_, _ = pool.Exec(ctx, "TRUNCATE person_accounts, employment_records, persons, organizations CASCADE")
-
-	orgRepo := NewOrgRepository(pool)
-	personRepo := NewPersonRepository(pool)
-	authRepo := NewAuthRepository(pool)
-
-	orgID := uuid.New()
-	requireNoError(t, orgRepo.Create(ctx, &domain.Organization{
-		ID: orgID, Name: "Test Org", Type: "company",
-	}))
+	orgID := newTestOrg(t, pool, "Auth Test Org")
 
 	personID := uuid.New()
-	requireNoError(t, personRepo.Create(ctx, &domain.Person{
+	requireNoError(t, NewPersonRepository(pool).Create(ctx, &domain.Person{
 		ID: personID, OrgID: orgID, FirstName: "Auth", LastName: "User", IsActive: true,
 	}))
 
-	// Create Account
+	authRepo := NewAuthRepository(pool)
+	username := "testuser-" + uuid.NewString()[:8]
+
 	acc := &domain.PersonAccount{
 		PersonID:     personID,
-		Username:     "testuser",
+		Username:     username,
 		PasswordHash: "hashedpass",
 		Role:         "admin",
 		IsActive:     true,
 	}
-	err := authRepo.CreateAccount(ctx, acc)
-	if err != nil {
+	if err := authRepo.CreateAccount(ctx, acc); err != nil {
 		t.Fatalf("CreateAccount failed: %v", err)
 	}
-
 	if acc.ID == uuid.Nil {
 		t.Errorf("expected account ID to be set")
 	}
 
-	// Get Account
-	fetched, err := authRepo.GetAccountByUsername(ctx, "testuser")
+	fetched, err := authRepo.GetAccountByUsername(ctx, username)
 	if err != nil {
 		t.Fatalf("GetAccountByUsername failed: %v", err)
 	}
-	if fetched == nil || fetched.Username != "testuser" {
-		t.Errorf("expected to fetch testuser account, got %v", fetched)
+	if fetched == nil || fetched.Username != username {
+		t.Errorf("expected to fetch %q account, got %v", username, fetched)
 	}
 
-	// Get Org ID
 	fetchedOrg, err := authRepo.GetOrgIDByPersonID(ctx, personID)
 	if err != nil {
 		t.Fatalf("GetOrgIDByPersonID failed: %v", err)
@@ -164,17 +184,10 @@ func TestAuthRepository_Integration(t *testing.T) {
 func TestOrgChart_Integration(t *testing.T) {
 	pool := integrationPool(t)
 	ctx := context.Background()
+	orgID := newTestOrg(t, pool, "Chart Test Org")
 
-	_, _ = pool.Exec(ctx, "TRUNCATE employment_records, persons, organizations CASCADE")
-
-	orgRepo := NewOrgRepository(pool)
 	personRepo := NewPersonRepository(pool)
 	empRepo := NewEmploymentRepository(pool)
-
-	orgID := uuid.New()
-	requireNoError(t, orgRepo.Create(ctx, &domain.Organization{
-		ID: orgID, Name: "Chart Org", Type: "company",
-	}))
 
 	// CEO
 	ceoID := uuid.New()
@@ -198,12 +211,10 @@ func TestOrgChart_Integration(t *testing.T) {
 		JobTitle: &mgrTitle, ReportsTo: &ceoID, ValidFrom: time.Now(),
 	}))
 
-	// Org Chart Query
 	nodes, err := personRepo.GetOrgChart(ctx, orgID)
 	if err != nil {
 		t.Fatalf("GetOrgChart failed: %v", err)
 	}
-
 	if len(nodes) != 2 {
 		t.Fatalf("expected 2 nodes, got %d", len(nodes))
 	}
@@ -223,7 +234,6 @@ func TestOrgChart_Integration(t *testing.T) {
 			}
 		}
 	}
-
 	if !foundCEO || !foundMgr {
 		t.Errorf("missing expected nodes in org chart")
 	}

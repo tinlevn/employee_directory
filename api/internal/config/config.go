@@ -14,6 +14,8 @@ type Config struct {
 	AllowedOrigins []string
 	Env            string
 	LogLevel       string
+	JWTSecret      string
+	JWTTTL         string
 }
 
 func Load() Config {
@@ -26,6 +28,8 @@ func Load() Config {
 		AllowedOrigins: splitCSV(envOr("CORS_ALLOWED_ORIGINS", "http://localhost:4321,http://localhost:4200,http://localhost:5173")),
 		Env:            envOr("APP_ENV", "development"),
 		LogLevel:       envOr("LOG_LEVEL", "info"),
+		JWTSecret:      envOr("JWT_SECRET", "dev-insecure-secret-change-me"),
+		JWTTTL:         envOr("JWT_TTL", "24h"),
 	}
 }
 
