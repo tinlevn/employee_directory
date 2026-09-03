@@ -19,14 +19,22 @@ export default function AnalyticsView() {
     };
   }, []);
 
-  if (error) return <p className="rounded bg-red-50 p-4 text-sm text-red-700">{error}</p>;
+  if (error) return <p className="rounded-md bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-600 dark:text-red-400">{error}</p>;
 
   return (
-    <section className="rounded-lg border bg-white p-6">
-      <h2 className="font-medium">Headcount by department</h2>
-      <div className="mt-4 divide-y">
-        {headcount.map((row) => <div key={row.department} className="flex justify-between py-2 text-sm"><span>{row.department}</span><strong>{row.count}</strong></div>)}
-        {!headcount.length && <p className="py-3 text-sm text-zinc-500">No headcount data.</p>}
+    <section className="rounded-lg border border-[#E6DBC5] dark:border-[#2b303c] bg-white dark:bg-[#1c1f26] p-6 shadow-sm">
+      <h2 className="font-semibold text-[#141E46] dark:text-slate-100 flex items-center gap-2">
+        <span className="h-2.5 w-2.5 rounded-full bg-[#41B06E] dark:bg-[#1DCD9F]"></span>
+        Headcount by department
+      </h2>
+      <div className="mt-4 divide-y divide-[#E6DBC5] dark:divide-[#2b303c]">
+        {headcount.map((row) => (
+          <div key={row.department} className="flex justify-between py-2.5 text-sm hover:bg-[#8DECB4]/20 dark:hover:bg-[#1DCD9F]/5 px-2 rounded transition-colors">
+            <span className="text-[#141E46]/90 dark:text-slate-300 font-medium">{row.department}</span>
+            <strong className="font-mono text-[#41B06E] dark:text-[#1DCD9F]">{row.count}</strong>
+          </div>
+        ))}
+        {!headcount.length && <p className="py-3 text-sm text-[#5A6578] dark:text-slate-400">No headcount data.</p>}
       </div>
     </section>
   );

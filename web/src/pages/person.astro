@@ -4,8 +4,11 @@ import PersonDetail from "../components/PersonDetail.tsx";
 ---
 
 <Layout title="Employee — Employee Directory">
-  <a href="/" class="text-sm text-zinc-500 hover:underline">← Back to directory</a>
+  <a href="/" class="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-[#1DCD9F] dark:hover:text-[#1DCD9F] transition-colors inline-flex items-center gap-1">
+    ← Back to directory
+  </a>
   <div id="person-detail" class="mt-6">
     <PersonDetail client:load />
   </div>
 </Layout>
+

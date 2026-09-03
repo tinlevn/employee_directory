@@ -6,17 +6,65 @@
 @import "@fontsource/sora/600.css";
 @import "@fontsource/sora/700.css";
 
+/* Enable class-based dark mode in Tailwind CSS v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
   --font-heading: "Sora", system-ui, sans-serif;
+
+  /* Dark mode mint palette */
+  --color-mint: #1DCD9F;
+  --color-mint-hover: #169976;
+  --color-mint-glow: rgba(29, 205, 159, 0.15);
+
+  --color-dark-bg: #131519;
+  --color-dark-card: #1c1f26;
+  --color-dark-hover: #252a34;
+  --color-dark-border: #2b303c;
+  --color-dark-muted: #94a3b8;
+
+  /* Light mode cream/mint/navy palette (#FFF5E0, #8DECB4, #41B06E, #141E46) */
+  --color-cream-bg: #FFF5E0;
+  --color-cream-card: #FFFFFF;
+  --color-cream-hover: #F7EEDD;
+  --color-cream-border: #E6DBC5;
+  --color-navy: #141E46;
+  --color-forest: #41B06E;
+  --color-forest-hover: #329057;
+  --color-pastel-mint: #8DECB4;
 }
 
 @layer base {
+  :root {
+    --bg-main: #FFF5E0;
+    --bg-card: #FFFFFF;
+    --bg-card-hover: #F7EEDD;
+    --border-main: #E6DBC5;
+    --text-main: #141E46;
+    --text-muted: #5A6578;
+    color-scheme: light;
+  }
+
+  .dark {
+    --bg-main: #131519;
+    --bg-card: #1c1f26;
+    --bg-card-hover: #252a34;
+    --border-main: #2b303c;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    color-scheme: dark;
+  }
+
   body {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
+
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
   }
