@@ -44,8 +44,8 @@ export default function PersonDetail({ id }: Props) {
   if (!person) return <p className="text-sm text-[#5A6578] dark:text-slate-400">Loading employee...</p>;
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-lg border border-[#E6DBC5] dark:border-[#2b303c] bg-white dark:bg-[#1c1f26] p-6 border-t-4 border-t-[#41B06E] dark:border-t-[#1DCD9F] shadow-sm">
+    <section className="rounded-lg border border-[#E6DBC5] dark:border-[#2b303c] bg-white dark:bg-[#1c1f26] shadow-sm divide-y divide-[#E6DBC5] dark:divide-[#2b303c]">
+      <div className="p-6">
         <div className="flex items-center gap-4">
             {person.profile_photo_url ? (
                 <img src={person.profile_photo_url} alt={`${person.first_name} ${person.last_name}`} className="w-16 h-16 rounded-full object-cover border border-[#E6DBC5] dark:border-[#2b303c]" width="64" height="64" />
@@ -65,21 +65,21 @@ export default function PersonDetail({ id }: Props) {
           <div><span className="text-[#5A6578] dark:text-slate-400">Location</span><p className="font-medium text-[#141E46] dark:text-slate-100">{person.city || "—"}{person.country ? `, ${person.country}` : ""}</p></div>
           <div><span className="text-[#5A6578] dark:text-slate-400">Hire date</span><p className="font-medium text-[#141E46] dark:text-slate-100">{employment?.hire_date?.slice(0, 10) || "—"}</p></div>
         </div>
-      </section>
+      </div>
 
-      <section className="rounded-lg border border-[#E6DBC5] dark:border-[#2b303c] bg-white dark:bg-[#1c1f26] p-6 shadow-sm">
+      <div className="p-6">
         <h2 className="font-semibold text-[#141E46] dark:text-slate-100 flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-[#41B06E] dark:bg-[#1DCD9F]"></span>
-          Current employment
+          Status
         </h2>
         <div className="mt-4 grid gap-4 text-sm sm:grid-cols-3">
           <div><span className="text-[#5A6578] dark:text-slate-400">Job level</span><p className="font-medium text-[#141E46] dark:text-slate-100">{employment?.job_level || "—"}</p></div>
           <div><span className="text-[#5A6578] dark:text-slate-400">Team</span><p className="font-medium text-[#141E46] dark:text-slate-100">{employment?.team || "—"}</p></div>
           <div><span className="text-[#5A6578] dark:text-slate-400">Work arrangement</span><p className="font-medium text-[#141E46] dark:text-slate-100">{employment?.work_arrangement || "—"}</p></div>
         </div>
-      </section>
+      </div>
 
-      <section className="rounded-lg border border-[#E6DBC5] dark:border-[#2b303c] bg-white dark:bg-[#1c1f26] p-6 shadow-sm">
+      <div className="p-6">
         <h2 className="font-semibold text-[#141E46] dark:text-slate-100 flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-[#41B06E] dark:bg-[#1DCD9F]"></span>
           Emergency contact
@@ -91,12 +91,12 @@ export default function PersonDetail({ id }: Props) {
             <div><span className="text-[#5A6578] dark:text-slate-400">Phone / email</span><p className="font-medium text-[#141E46] dark:text-slate-100">{contact.phone || contact.email || "—"}</p></div>
           </div>
         ) : <p className="mt-3 text-sm text-[#5A6578] dark:text-slate-400">No emergency contact recorded.</p>}
-      </section>
+      </div>
 
-      <section className="rounded-lg border border-[#E6DBC5] dark:border-[#2b303c] bg-white dark:bg-[#1c1f26] p-6 shadow-sm">
+      <div className="p-6">
         <h2 className="font-semibold text-[#141E46] dark:text-slate-100 flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-[#41B06E] dark:bg-[#1DCD9F]"></span>
-          Event timeline
+          Timeline
         </h2>
         {events.length ? (
           <div className="mt-4 divide-y divide-[#E6DBC5] dark:divide-[#2b303c] border border-[#E6DBC5] dark:border-[#2b303c] rounded-md overflow-hidden">
@@ -108,7 +108,7 @@ export default function PersonDetail({ id }: Props) {
             ))}
           </div>
         ) : <p className="mt-3 text-sm text-[#5A6578] dark:text-slate-400">No events recorded.</p>}
-      </section>
-    </div>
+      </div>
+    </section>
   );
 }
