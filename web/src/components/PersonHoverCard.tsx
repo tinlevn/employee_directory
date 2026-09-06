@@ -6,7 +6,28 @@ interface Details {
   employment: EmploymentRecord | null;
 }
 
-const cache = new Map<string, Details>();
+const MAX_CACHE_SIZE = 50;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const cache = new Map<string, { details: Details; timestamp: number }>();
+
+function getCached(id: string): Details | null {
+  const entry = cache.get(id);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
+    cache.delete(id);
+    return null;
+  }
+  return entry.details;
+}
+
+function setCached(id: string, details: Details) {
+  if (cache.size >= MAX_CACHE_SIZE) {
+    const oldestKey = cache.keys().next().value;
+    if (oldestKey) cache.delete(oldestKey);
+  }
+  cache.set(id, { details, timestamp: Date.now() });
+}
+
 const CARD_WIDTH = 340;
 const EST_HEIGHT = 380;
 
@@ -32,10 +53,10 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 }
 
 export default function PersonHoverCard({ personId, fallback, anchorRect, onEnter, onLeave }: Props) {
-  const [details, setDetails] = useState<Details | null>(cache.get(personId) ?? null);
+  const [details, setDetails] = useState<Details | null>(getCached(personId));
 
   useEffect(() => {
-    const cached = cache.get(personId);
+    const cached = getCached(personId);
     if (cached) {
       setDetails(cached);
       return;
@@ -45,7 +66,7 @@ export default function PersonHoverCard({ personId, fallback, anchorRect, onEnte
     Promise.all([api.getPerson(personId), api.getCurrentEmployment(personId).catch(() => null)])
       .then(([person, employment]) => {
         const entry: Details = { person, employment };
-        cache.set(personId, entry);
+        setCached(personId, entry);
         if (!cancelled) setDetails(entry);
       })
       .catch(() => {

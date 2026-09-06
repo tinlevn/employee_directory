@@ -102,9 +102,9 @@ func main() {
 
 		// handlers
 		personH := handler.NewPersonHandler(personRepo, validate)
-		emergencyH := handler.NewEmergencyHandler(emergencyRepo, validate)
-		employmentH := handler.NewEmploymentHandler(employmentRepo, validate)
-		eventH := handler.NewEventHandler(eventRepo, transferRepo, validate)
+		emergencyH := handler.NewEmergencyHandler(emergencyRepo, personRepo, validate)
+		employmentH := handler.NewEmploymentHandler(employmentRepo, personRepo, validate)
+		eventH := handler.NewEventHandler(eventRepo, transferRepo, personRepo, validate)
 		analyticsH := handler.NewAnalyticsHandler(analyticsRepo, validate)
 		orgH := handler.NewOrgHandler(orgRepo, validate)
 		authH := handler.NewAuthHandler(authRepo, authSvc, validate)

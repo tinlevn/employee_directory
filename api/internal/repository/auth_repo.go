@@ -42,6 +42,23 @@ func (r *AuthRepository) GetAccountByUsername(ctx context.Context, username stri
 	return &acc, nil
 }
 
+func (r *AuthRepository) GetAccountByPersonID(ctx context.Context, personID uuid.UUID) (*domain.PersonAccount, error) {
+	q := `SELECT id, person_id, username, password_hash, role, permissions, is_active, last_login, two_factor_enabled, account_locked, created_at, updated_at
+	      FROM person_accounts WHERE person_id = $1 LIMIT 1`
+	var acc domain.PersonAccount
+	err := r.pool.QueryRow(ctx, q, personID).Scan(
+		&acc.ID, &acc.PersonID, &acc.Username, &acc.PasswordHash, &acc.Role, &acc.Permissions,
+		&acc.IsActive, &acc.LastLogin, &acc.TwoFactorEnabled, &acc.AccountLocked, &acc.CreatedAt, &acc.UpdatedAt,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &acc, nil
+}
+
 func (r *AuthRepository) GetOrgIDByPersonID(ctx context.Context, personID uuid.UUID) (uuid.UUID, error) {
 	q := `SELECT org_id FROM persons WHERE id = $1`
 	var orgID uuid.UUID

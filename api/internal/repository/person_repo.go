@@ -79,13 +79,13 @@ func (r *PersonRepository) Create(ctx context.Context, p *domain.Person) error {
 	return err
 }
 
-func (r *PersonRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Person, error) {
+func (r *PersonRepository) GetByID(ctx context.Context, id, orgID uuid.UUID) (*domain.Person, error) {
 	row := r.pool.QueryRow(ctx, `
 		SELECT p.id, p.org_id, p.first_name, p.middle_name, p.last_name, p.preferred_name, p.date_of_birth, p.gender, p.profile_photo_url, p.personal_email, p.org_email, p.phone_primary, p.address_line_1, p.address_line_2, p.city, p.state_province, p.postal_code, p.country, p.is_international, p.is_active, p.archived_at, p.archive_reason, p.source, p.notes, p.tags, p.created_at, p.updated_at, p.created_by, p.updated_by,
 		       e.job_title, e.department, e.team, e.office_location, e.hire_date
 		FROM persons p
 		LEFT JOIN employment_records e ON e.person_id = p.id AND e.is_current = true
-		WHERE p.id=$1`, id)
+		WHERE p.id=$1 AND p.org_id=$2`, id, orgID)
 	var p domain.Person
 	err := row.Scan(&p.ID, &p.OrgID, &p.FirstName, &p.MiddleName, &p.LastName, &p.PreferredName, &p.DateOfBirth, &p.Gender, &p.ProfilePhotoURL, &p.PersonalEmail, &p.OrgEmail, &p.PhonePrimary, &p.AddressLine1, &p.AddressLine2, &p.City, &p.StateProvince, &p.PostalCode, &p.Country, &p.IsInternational, &p.IsActive, &p.ArchivedAt, &p.ArchiveReason, &p.Source, &p.Notes, &p.Tags, &p.CreatedAt, &p.UpdatedAt, &p.CreatedBy, &p.UpdatedBy, &p.CurrentJobTitle, &p.CurrentDepartment, &p.CurrentTeam, &p.CurrentOfficeLocation, &p.CurrentHireDate)
 	if err != nil {
@@ -217,9 +217,9 @@ func (r *PersonRepository) List(ctx context.Context, q dto.ListPersonsQuery) ([]
 	return out, total, rows.Err()
 }
 
-func (r *PersonRepository) Update(ctx context.Context, id uuid.UUID, fields map[string]any) (*domain.Person, error) {
+func (r *PersonRepository) Update(ctx context.Context, id, orgID uuid.UUID, fields map[string]any) (*domain.Person, error) {
 	if len(fields) == 0 {
-		return r.GetByID(ctx, id)
+		return r.GetByID(ctx, id, orgID)
 	}
 	keys := make([]string, 0, len(fields))
 	for k := range fields {
@@ -227,13 +227,13 @@ func (r *PersonRepository) Update(ctx context.Context, id uuid.UUID, fields map[
 	}
 	sort.Strings(keys)
 	set := make([]string, 0, len(keys))
-	args := make([]any, 0, len(keys)+1)
+	args := make([]any, 0, len(keys)+2)
 	for i, k := range keys {
 		set = append(set, fmt.Sprintf("%s = $%d", k, i+1))
 		args = append(args, fields[k])
 	}
-	args = append(args, id)
-	sql := fmt.Sprintf(`UPDATE persons SET %s, updated_at=now() WHERE id=$%d RETURNING id, org_id, first_name, middle_name, last_name, preferred_name, date_of_birth, gender, profile_photo_url, personal_email, org_email, phone_primary, address_line_1, address_line_2, city, state_province, postal_code, country, is_international, is_active, archived_at, archive_reason, source, notes, tags, created_at, updated_at, created_by, updated_by`, strings.Join(set, ", "), len(keys)+1)
+	args = append(args, id, orgID)
+	sql := fmt.Sprintf(`UPDATE persons SET %s, updated_at=now() WHERE id=$%d AND org_id=$%d RETURNING id, org_id, first_name, middle_name, last_name, preferred_name, date_of_birth, gender, profile_photo_url, personal_email, org_email, phone_primary, address_line_1, address_line_2, city, state_province, postal_code, country, is_international, is_active, archived_at, archive_reason, source, notes, tags, created_at, updated_at, created_by, updated_by`, strings.Join(set, ", "), len(keys)+1, len(keys)+2)
 	row := r.pool.QueryRow(ctx, sql, args...)
 	var p domain.Person
 	err := row.Scan(&p.ID, &p.OrgID, &p.FirstName, &p.MiddleName, &p.LastName, &p.PreferredName, &p.DateOfBirth, &p.Gender, &p.ProfilePhotoURL, &p.PersonalEmail, &p.OrgEmail, &p.PhonePrimary, &p.AddressLine1, &p.AddressLine2, &p.City, &p.StateProvince, &p.PostalCode, &p.Country, &p.IsInternational, &p.IsActive, &p.ArchivedAt, &p.ArchiveReason, &p.Source, &p.Notes, &p.Tags, &p.CreatedAt, &p.UpdatedAt, &p.CreatedBy, &p.UpdatedBy)
@@ -241,10 +241,10 @@ func (r *PersonRepository) Update(ctx context.Context, id uuid.UUID, fields map[
 		return nil, err
 	}
 	// enrich again
-	return r.GetByID(ctx, p.ID)
+	return r.GetByID(ctx, p.ID, orgID)
 }
 
-func (r *PersonRepository) SoftDelete(ctx context.Context, id uuid.UUID, reason string) (bool, error) {
-	result, err := r.pool.Exec(ctx, `UPDATE persons SET is_active=false, archived_at=now(), archive_reason=$2, updated_at=now() WHERE id=$1`, id, reason)
+func (r *PersonRepository) SoftDelete(ctx context.Context, id, orgID uuid.UUID, reason string) (bool, error) {
+	result, err := r.pool.Exec(ctx, `UPDATE persons SET is_active=false, archived_at=now(), archive_reason=$3, updated_at=now() WHERE id=$1 AND org_id=$2`, id, orgID, reason)
 	return result.RowsAffected() > 0, err
 }

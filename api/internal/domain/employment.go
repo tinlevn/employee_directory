@@ -37,3 +37,10 @@ type EmploymentRecord struct {
 	CreatedBy         *uuid.UUID `json:"created_by,omitempty"`
 	UpdatedBy         *uuid.UUID `json:"updated_by,omitempty"`
 }
+
+func (e *EmploymentRecord) MaskSensitiveDetails() {
+	e.SalaryAmount = nil
+	e.SalaryCurrency = nil
+	e.PayFrequency = nil
+	e.HourlyRate = nil
+}

@@ -69,3 +69,5 @@ Thumbs.db
 .env.*
 !.env.example
 
+# Antigravity agents & local skills
+.agents/

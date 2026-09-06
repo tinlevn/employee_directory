@@ -48,7 +48,8 @@ func (h *PersonHandler) Get(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid id")
 	}
-	p, err := h.repo.GetByID(c.Context(), id)
+	orgID := middleware.GetOrgID(c)
+	p, err := h.repo.GetByID(c.Context(), id, orgID)
 	if err != nil {
 		return err
 	}
@@ -86,7 +87,7 @@ func (h *PersonHandler) Create(c *fiber.Ctx) error {
 	if err := h.repo.Create(c.Context(), &p); err != nil {
 		return middleware.RepositoryError(err)
 	}
-	created, err := h.repo.GetByID(c.Context(), p.ID)
+	created, err := h.repo.GetByID(c.Context(), p.ID, orgID)
 	if err != nil {
 		return middleware.RepositoryError(err)
 	}
@@ -169,7 +170,8 @@ func (h *PersonHandler) Update(c *fiber.Ctx) error {
 		fields["tags"] = *req.Tags
 	}
 
-	updated, err := h.repo.Update(c.Context(), id, fields)
+	orgID := middleware.GetOrgID(c)
+	updated, err := h.repo.Update(c.Context(), id, orgID, fields)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return fiber.NewError(fiber.StatusNotFound, "person not found")
@@ -185,7 +187,8 @@ func (h *PersonHandler) Delete(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid id")
 	}
 	reason := c.Query("reason", "deactivated")
-	found, err := h.repo.SoftDelete(c.Context(), id, reason)
+	orgID := middleware.GetOrgID(c)
+	found, err := h.repo.SoftDelete(c.Context(), id, orgID, reason)
 	if err != nil {
 		return middleware.RepositoryError(err)
 	}

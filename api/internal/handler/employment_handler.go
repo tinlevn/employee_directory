@@ -16,12 +16,34 @@ import (
 )
 
 type EmploymentHandler struct {
-	repo      *repository.EmploymentRepository
-	validator *validator.Validate
+	repo       *repository.EmploymentRepository
+	personRepo *repository.PersonRepository
+	validator  *validator.Validate
 }
 
-func NewEmploymentHandler(repo *repository.EmploymentRepository, v *validator.Validate) *EmploymentHandler {
-	return &EmploymentHandler{repo: repo, validator: v}
+func NewEmploymentHandler(repo *repository.EmploymentRepository, personRepo *repository.PersonRepository, v *validator.Validate) *EmploymentHandler {
+	return &EmploymentHandler{repo: repo, personRepo: personRepo, validator: v}
+}
+
+func (h *EmploymentHandler) ensurePersonInTenant(c *fiber.Ctx, pid uuid.UUID) error {
+	orgID := middleware.GetOrgID(c)
+	p, err := h.personRepo.GetByID(c.Context(), pid, orgID)
+	if err != nil {
+		return middleware.RepositoryError(err)
+	}
+	if p == nil {
+		return fiber.NewError(fiber.StatusNotFound, "person not found")
+	}
+	return nil
+}
+
+func canViewCompensation(c *fiber.Ctx, targetPersonID uuid.UUID) bool {
+	role := middleware.GetRole(c)
+	if role == "admin" || role == "manager" {
+		return true
+	}
+	callerPersonID := middleware.GetPersonID(c)
+	return callerPersonID != uuid.Nil && callerPersonID == targetPersonID
 }
 
 func (h *EmploymentHandler) List(c *fiber.Ctx) error {
@@ -29,12 +51,20 @@ func (h *EmploymentHandler) List(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid person id")
 	}
+	if err := h.ensurePersonInTenant(c, pid); err != nil {
+		return err
+	}
 	list, err := h.repo.ListByPerson(c.Context(), pid)
 	if err != nil {
 		return middleware.RepositoryError(err)
 	}
 	if list == nil {
 		list = []domain.EmploymentRecord{}
+	}
+	if !canViewCompensation(c, pid) {
+		for i := range list {
+			list[i].MaskSensitiveDetails()
+		}
 	}
 	return c.JSON(list)
 }
@@ -44,12 +74,18 @@ func (h *EmploymentHandler) GetCurrent(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid person id")
 	}
+	if err := h.ensurePersonInTenant(c, pid); err != nil {
+		return err
+	}
 	cur, err := h.repo.GetCurrent(c.Context(), pid)
 	if err != nil {
 		return middleware.RepositoryError(err)
 	}
 	if cur == nil {
 		return fiber.NewError(fiber.StatusNotFound, "no current employment record")
+	}
+	if !canViewCompensation(c, pid) {
+		cur.MaskSensitiveDetails()
 	}
 	return c.JSON(cur)
 }
@@ -58,6 +94,9 @@ func (h *EmploymentHandler) Create(c *fiber.Ctx) error {
 	pid, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid person id")
+	}
+	if err := h.ensurePersonInTenant(c, pid); err != nil {
+		return err
 	}
 	var req dto.CreateEmploymentRequest
 	if err := c.BodyParser(&req); err != nil {

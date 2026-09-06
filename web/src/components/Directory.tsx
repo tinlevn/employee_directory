@@ -107,19 +107,7 @@ function onCardLeave() {
     try {
       const res = await api.listPersons({ q: qVal, department: deptVal, page: targetPage, page_size: targetPageSize, sort: sortVal });
       if (version !== requestVersion.current) return;
-
-      let list = [...res.data];
-      if (sortVal === "first_name") {
-        list.sort((a, b) => `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`));
-      } else if (sortVal === "-first_name") {
-        list.sort((a, b) => `${b.first_name} ${b.last_name}`.localeCompare(`${a.first_name} ${a.last_name}`));
-      } else if (sortVal === "city") {
-        list.sort((a, b) => (a.city || "").localeCompare(b.city || ""));
-      } else if (sortVal === "-city") {
-        list.sort((a, b) => (b.city || "").localeCompare(a.city || ""));
-      }
-
-      setPersons(list);
+      setPersons(res.data);
       setTotal(res.total);
       setTotalPages(res.total_pages || Math.ceil(res.total / targetPageSize) || 1);
       setPage(res.page);

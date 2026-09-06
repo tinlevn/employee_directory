@@ -64,7 +64,9 @@ func GetOrgID(c *fiber.Ctx) uuid.UUID {
 
 func GetAccountID(c *fiber.Ctx) uuid.UUID {
 	if cl := claimsFrom(c); cl != nil {
-		return uuid.MustParse(cl.Subject)
+		if id, err := uuid.Parse(cl.Subject); err == nil {
+			return id
+		}
 	}
 	return uuid.Nil
 }

@@ -12,18 +12,34 @@ import (
 )
 
 type EmergencyHandler struct {
-	repo      *repository.EmergencyContactRepository
-	validator *validator.Validate
+	repo       *repository.EmergencyContactRepository
+	personRepo *repository.PersonRepository
+	validator  *validator.Validate
 }
 
-func NewEmergencyHandler(repo *repository.EmergencyContactRepository, v *validator.Validate) *EmergencyHandler {
-	return &EmergencyHandler{repo: repo, validator: v}
+func NewEmergencyHandler(repo *repository.EmergencyContactRepository, personRepo *repository.PersonRepository, v *validator.Validate) *EmergencyHandler {
+	return &EmergencyHandler{repo: repo, personRepo: personRepo, validator: v}
+}
+
+func (h *EmergencyHandler) ensurePersonInTenant(c *fiber.Ctx, pid uuid.UUID) error {
+	orgID := middleware.GetOrgID(c)
+	p, err := h.personRepo.GetByID(c.Context(), pid, orgID)
+	if err != nil {
+		return middleware.RepositoryError(err)
+	}
+	if p == nil {
+		return fiber.NewError(fiber.StatusNotFound, "person not found")
+	}
+	return nil
 }
 
 func (h *EmergencyHandler) Get(c *fiber.Ctx) error {
 	pid, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid person id")
+	}
+	if err := h.ensurePersonInTenant(c, pid); err != nil {
+		return err
 	}
 	ec, err := h.repo.GetByPerson(c.Context(), pid)
 	if err != nil {
@@ -39,6 +55,9 @@ func (h *EmergencyHandler) Upsert(c *fiber.Ctx) error {
 	pid, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid person id")
+	}
+	if err := h.ensurePersonInTenant(c, pid); err != nil {
+		return err
 	}
 	var req dto.CreateEmergencyContactRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -68,6 +87,9 @@ func (h *EmergencyHandler) Update(c *fiber.Ctx) error {
 	pid, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid person id")
+	}
+	if err := h.ensurePersonInTenant(c, pid); err != nil {
+		return err
 	}
 	existing, err := h.repo.GetByPerson(c.Context(), pid)
 	if err != nil {
@@ -106,6 +128,9 @@ func (h *EmergencyHandler) Delete(c *fiber.Ctx) error {
 	pid, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid person id")
+	}
+	if err := h.ensurePersonInTenant(c, pid); err != nil {
+		return err
 	}
 	found, err := h.repo.Delete(c.Context(), pid)
 	if err != nil {

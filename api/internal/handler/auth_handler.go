@@ -53,6 +53,12 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 		return middleware.RepositoryError(err)
 	}
 
+	if existingAcc, err := h.repo.GetAccountByPersonID(c.Context(), personID); err != nil {
+		return middleware.RepositoryError(err)
+	} else if existingAcc != nil {
+		return fiber.NewError(fiber.StatusConflict, "an account already exists for this person")
+	}
+
 	if existing, err := h.repo.GetAccountByUsername(c.Context(), req.Username); err != nil {
 		return middleware.RepositoryError(err)
 	} else if existing != nil {

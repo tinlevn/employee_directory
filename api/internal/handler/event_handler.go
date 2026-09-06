@@ -16,19 +16,35 @@ import (
 )
 
 type EventHandler struct {
-	events    *repository.EventRepository
-	transfers *repository.TransferRepository
-	validator *validator.Validate
+	events     *repository.EventRepository
+	transfers  *repository.TransferRepository
+	personRepo *repository.PersonRepository
+	validator  *validator.Validate
 }
 
-func NewEventHandler(ev *repository.EventRepository, tr *repository.TransferRepository, v *validator.Validate) *EventHandler {
-	return &EventHandler{events: ev, transfers: tr, validator: v}
+func NewEventHandler(ev *repository.EventRepository, tr *repository.TransferRepository, personRepo *repository.PersonRepository, v *validator.Validate) *EventHandler {
+	return &EventHandler{events: ev, transfers: tr, personRepo: personRepo, validator: v}
+}
+
+func (h *EventHandler) ensurePersonInTenant(c *fiber.Ctx, pid uuid.UUID) error {
+	orgID := middleware.GetOrgID(c)
+	p, err := h.personRepo.GetByID(c.Context(), pid, orgID)
+	if err != nil {
+		return middleware.RepositoryError(err)
+	}
+	if p == nil {
+		return fiber.NewError(fiber.StatusNotFound, "person not found")
+	}
+	return nil
 }
 
 func (h *EventHandler) ListEvents(c *fiber.Ctx) error {
 	pid, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid person id")
+	}
+	if err := h.ensurePersonInTenant(c, pid); err != nil {
+		return err
 	}
 	var q dto.ListEventsQuery
 	if err := c.QueryParser(&q); err != nil {
@@ -49,6 +65,9 @@ func (h *EventHandler) CreateEvent(c *fiber.Ctx) error {
 	pid, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid person id")
+	}
+	if err := h.ensurePersonInTenant(c, pid); err != nil {
+		return err
 	}
 	var req dto.CreateEventRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -104,6 +123,9 @@ func (h *EventHandler) ListTransfers(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid person id")
 	}
+	if err := h.ensurePersonInTenant(c, pid); err != nil {
+		return err
+	}
 	page := c.QueryInt("page", 1)
 	pageSize := c.QueryInt("page_size", 20)
 	if page < 1 {
@@ -123,6 +145,9 @@ func (h *EventHandler) CreateTransfer(c *fiber.Ctx) error {
 	pid, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid person id")
+	}
+	if err := h.ensurePersonInTenant(c, pid); err != nil {
+		return err
 	}
 	var req dto.CreateTransferRequest
 	if err := c.BodyParser(&req); err != nil {
