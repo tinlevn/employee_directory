@@ -25,7 +25,7 @@ func Load() Config {
 	return Config{
 		Port:           envOr("PORT", "8080"),
 		DatabaseURL:    envOr("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/employee_directory?sslmode=disable"),
-		AllowedOrigins: splitCSV(envOr("CORS_ALLOWED_ORIGINS", "http://localhost:4321,http://localhost:4200,http://localhost:5173")),
+		AllowedOrigins: splitCSV(envOr("CORS_ALLOWED_ORIGINS", "http://localhost:4321,http://localhost:5173")),
 		Env:            envOr("APP_ENV", "development"),
 		LogLevel:       envOr("LOG_LEVEL", "info"),
 		JWTSecret:      envOr("JWT_SECRET", "dev-insecure-secret-change-me"),

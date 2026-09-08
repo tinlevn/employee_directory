@@ -1,6 +1,6 @@
 # Employee Directory API — Go + Fiber
 
-Robust replacement for the old `staff-api` (.NET) implementing the full schema from `person_directory_schema_employee_only.md`.
+High-performance employee directory backend implemented in Go and Fiber, with SCD Type 2 history, append-only event logging, multi-tenant isolation, and PostgreSQL.
 
 ## Stack
 - **Fiber v2** — 3x faster than net/http, Express-like
@@ -67,8 +67,7 @@ The Compose `migrate` service applies every migration before the API starts. For
 
 Errors are RFC 7807 `ProblemDetails` compatible. Validation 400s include `errors` map.
 
-## Legacy compat
-The old `/api/employees` routes remain only as a temporary compatibility shim. They do not preserve the old Angular response shape; migrate clients to `/api/v1/persons`.
-
-## Old .NET project
-`../staff-api` is kept for reference but is **deprecated**. Delete it once Astro client points to `/api/v1`.
+## Architecture & Design Highlights
+- **Tenant Isolation**: Handlers enforce tenant boundaries derived directly from validated JWT claims.
+- **Field Masking**: Compensation and sensitive fields are masked for standard employees and non-owners.
+- **Append-Only Event Log**: Database triggers prevent modification or deletion of lifecycle audit records.

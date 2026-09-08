@@ -1,47 +1,25 @@
 # Build outputs
 bin/
-obj/
-*/bin/
-*/obj/
-Debug/
-Release/
-*/Debug/
-*/Release/
+dist/
 build/
 out/
-target/
-artifacts/
-TestResults/
 
-# Visual Studio caches
-.vs/
-*.suo
-*.user
-*.rsuser
-*.userosscache
-*.sln.docstates
-*.ipch
-
-# NuGet packages
-*.nupkg
-*.snupkg
-packages/
-
-# Logs
-*.log
-*.svclog
-
-# Publish artifacts
-*.Publish.xml
-publish/
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
 
 # Node
 node_modules/
-dist/
+.astro/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Angular cache
-.angular/
-*/.angular/
 
 # Coverage reports
 coverage/
@@ -59,10 +37,7 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
-*.pidb
-*.psess
-*.vsp
-*.vspx
+
 
 # Local secrets
 .env
