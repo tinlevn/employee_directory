@@ -61,19 +61,22 @@ export default function PersonHoverCard({ personId, fallback, anchorRect, onEnte
       setDetails(cached);
       return;
     }
-    let cancelled = false;
+    const controller = new AbortController();
     setDetails(null);
-    Promise.all([api.getPerson(personId), api.getCurrentEmployment(personId).catch(() => null)])
+    Promise.all([
+      api.getPerson(personId, { signal: controller.signal }),
+      api.getCurrentEmployment(personId, { signal: controller.signal }).catch(() => null),
+    ])
       .then(([person, employment]) => {
         const entry: Details = { person, employment };
         setCached(personId, entry);
-        if (!cancelled) setDetails(entry);
+        if (!controller.signal.aborted) setDetails(entry);
       })
       .catch(() => {
-        if (!cancelled) setDetails(null);
+        if (!controller.signal.aborted) setDetails(null);
       });
     return () => {
-      cancelled = true;
+      controller.abort();
     };
   }, [personId]);
 

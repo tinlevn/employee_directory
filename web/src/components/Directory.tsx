@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { api, type Person } from "../lib/api";
+import PersonDrawer from "./PersonDrawer";
 import PersonHoverCard from "./PersonHoverCard";
 
 const HOVER_OPEN_MS = 150;
@@ -29,6 +30,67 @@ function pushURL(q: string, department: string, page: number, pageSize: number, 
   window.history.pushState(null, "", url);
 }
 
+function InfoIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-3.5 w-3.5">
+      <circle cx="8" cy="8" r="6.5" />
+      <path d="M8 7.5v3.5" strokeLinecap="round" />
+      <circle cx="8" cy="5" r="0.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+interface DirectoryRowProps {
+  person: Person;
+  idx: number;
+  onInfoEnter: (e: React.SyntheticEvent<HTMLElement>, id: string) => void;
+  onInfoLeave: () => void;
+  onRowClick: (id: string) => void;
+}
+
+const DirectoryRow = memo(function DirectoryRow({ person: p, idx, onInfoEnter, onInfoLeave, onRowClick }: DirectoryRowProps) {
+  return (
+    <tr
+      className={`border-t border-[#E6DBC5] dark:border-[#2b303c] ${idx % 2 === 0 ? "bg-white dark:bg-[#1c1f26]" : "bg-[#FFF9EE] dark:bg-[#20242d]"} hover:bg-[#8DECB4]/25 dark:hover:bg-[#1DCD9F]/10 transition-colors`}
+    >
+      <td className="px-4 py-3 font-medium">
+        <span className="flex items-center gap-1.5">
+          <button
+            type="button"
+            aria-label={`Show details for ${p.first_name} ${p.last_name}`}
+            onMouseEnter={(e) => onInfoEnter(e, p.id)}
+            onMouseLeave={onInfoLeave}
+            onFocus={(e) => onInfoEnter(e, p.id)}
+            onBlur={onInfoLeave}
+            className="shrink-0 rounded p-0.5 text-[#5A6578] dark:text-slate-500 transition-colors hover:bg-[#E6DBC5]/60 dark:hover:bg-[#252a34] hover:text-[#141E46] dark:hover:text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#41B06E]"
+          >
+            <InfoIcon />
+          </button>
+          <button
+            type="button"
+            onClick={() => onRowClick(p.id)}
+            className="truncate text-left text-[#141E46] dark:text-slate-100 hover:text-[#41B06E] dark:hover:text-[#1DCD9F] transition-colors font-medium focus:outline-none focus-visible:underline"
+          >
+            {p.first_name} {p.last_name}
+          </button>
+          {p.preferred_name && <span className="shrink-0 text-[#7A869A] dark:text-slate-500">({p.preferred_name})</span>}
+        </span>
+      </td>
+      <td className="px-4 py-3 text-[#141E46]/90 dark:text-slate-300">{p.current_job_title || "—"}</td>
+      <td className="px-4 py-3">
+        {p.current_department ? (
+          <span className="rounded-full bg-[#8DECB4]/30 dark:bg-[#1DCD9F]/20 px-2.5 py-0.5 text-xs font-semibold text-[#141E46] dark:text-[#1DCD9F] border border-[#41B06E]/30 dark:border-[#1DCD9F]/40">{p.current_department}</span>
+        ) : (
+          <span className="text-[#94a0b2] dark:text-slate-600">—</span>
+        )}
+      </td>
+      <td className="px-4 py-3 text-[#5A6578] dark:text-slate-400">{p.org_email || p.personal_email || "—"}</td>
+      <td className="px-4 py-3 text-[#141E46]/90 dark:text-slate-300">{p.city || "—"}</td>
+    </tr>
+  );
+});
+
+
 export default function Directory() {
   const [q, setQ] = useState("");
   const [department, setDepartment] = useState("");
@@ -43,10 +105,11 @@ export default function Directory() {
   const [departments, setDepartments] = useState<string[]>([]);
   const requestVersion = useRef(0);
   const [hover, setHover] = useState<{ id: string; rect: DOMRect } | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const openTimer = useRef<number | null>(null);
   const closeTimer = useRef<number | null>(null);
 
-  function clearHoverTimers() {
+  const clearHoverTimers = useCallback(() => {
     if (openTimer.current !== null) {
       clearTimeout(openTimer.current);
       openTimer.current = null;
@@ -55,37 +118,35 @@ export default function Directory() {
       clearTimeout(closeTimer.current);
       closeTimer.current = null;
     }
-  }
+  }, []);
 
-function InfoIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-3.5 w-3.5">
-      <circle cx="8" cy="8" r="6.5" />
-      <path d="M8 7.5v3.5" strokeLinecap="round" />
-      <circle cx="8" cy="5" r="0.5" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
+  const onAnchorEnter = useCallback((e: React.SyntheticEvent<HTMLElement>, id: string) => {
+    clearHoverTimers();
+    const rect = e.currentTarget.getBoundingClientRect();
+    openTimer.current = window.setTimeout(() => setHover({ id, rect }), HOVER_OPEN_MS);
+  }, [clearHoverTimers]);
 
-function onAnchorEnter(e: React.SyntheticEvent<HTMLElement>, id: string) {
-  clearHoverTimers();
-  const rect = e.currentTarget.getBoundingClientRect();
-  openTimer.current = window.setTimeout(() => setHover({ id, rect }), HOVER_OPEN_MS);
-}
+  const onAnchorLeave = useCallback(() => {
+    clearHoverTimers();
+    closeTimer.current = window.setTimeout(() => setHover(null), HOVER_CLOSE_MS);
+  }, [clearHoverTimers]);
 
-function onAnchorLeave() {
-  clearHoverTimers();
-  closeTimer.current = window.setTimeout(() => setHover(null), HOVER_CLOSE_MS);
-}
+  const onCardEnter = useCallback(() => {
+    clearHoverTimers();
+  }, [clearHoverTimers]);
 
-function onCardEnter() {
-  clearHoverTimers();
-}
+  const onCardLeave = useCallback(() => {
+    clearHoverTimers();
+    closeTimer.current = window.setTimeout(() => setHover(null), HOVER_CLOSE_MS);
+  }, [clearHoverTimers]);
 
-function onCardLeave() {
-  clearHoverTimers();
-  closeTimer.current = window.setTimeout(() => setHover(null), HOVER_CLOSE_MS);
-}
+  const onRowClick = useCallback((id: string) => {
+    setHover(null);
+    clearHoverTimers();
+    setSelectedId(id);
+  }, [clearHoverTimers]);
+
+  const closeDrawer = useCallback(() => setSelectedId(null), []);
 
   useEffect(() => {
     if (!hover) return;
@@ -246,6 +307,9 @@ function onCardLeave() {
             <tr>
               <th
                 onClick={() => toggleSort("name")}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleSort("name"); } }}
                 className="px-4 py-3 cursor-pointer select-none hover:text-[#41B06E] dark:hover:text-[#1DCD9F] transition-colors"
                 title="Click to sort by Name (A-Z / Z-A)"
               >
@@ -263,6 +327,9 @@ function onCardLeave() {
               <th className="px-4 py-3">Email</th>
               <th
                 onClick={() => toggleSort("city")}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleSort("city"); } }}
                 className="px-4 py-3 cursor-pointer select-none hover:text-[#41B06E] dark:hover:text-[#1DCD9F] transition-colors"
                 title="Click to sort by City (A-Z / Z-A)"
               >
@@ -279,40 +346,7 @@ function onCardLeave() {
           </thead>
           <tbody>
             {persons.map((p, idx) => (
-              <tr
-                key={p.id}
-                className={`border-t border-[#E6DBC5] dark:border-[#2b303c] ${idx % 2 === 0 ? "bg-white dark:bg-[#1c1f26]" : "bg-[#FFF9EE] dark:bg-[#20242d]"} hover:bg-[#8DECB4]/25 dark:hover:bg-[#1DCD9F]/10 transition-colors`}
-              >
-                <td className="px-4 py-3 font-medium">
-                  <span className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      aria-label={`Show details for ${p.first_name} ${p.last_name}`}
-                      onMouseEnter={(e) => onAnchorEnter(e, p.id)}
-                      onMouseLeave={onAnchorLeave}
-                      onFocus={(e) => onAnchorEnter(e, p.id)}
-                      onBlur={onAnchorLeave}
-                      className="shrink-0 rounded p-0.5 text-[#5A6578] dark:text-slate-500 transition-colors hover:bg-[#E6DBC5]/60 dark:hover:bg-[#252a34] hover:text-[#141E46] dark:hover:text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#41B06E]"
-                    >
-                      <InfoIcon />
-                    </button>
-                    <a href={`/person?id=${encodeURIComponent(p.id)}`} className="truncate text-[#141E46] dark:text-slate-100 hover:text-[#41B06E] dark:hover:text-[#1DCD9F] transition-colors font-medium">
-                      {p.first_name} {p.last_name}
-                    </a>
-                    {p.preferred_name && <span className="shrink-0 text-[#7A869A] dark:text-slate-500">({p.preferred_name})</span>}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-[#141E46]/90 dark:text-slate-300">{p.current_job_title || "—"}</td>
-                <td className="px-4 py-3">
-                  {p.current_department ? (
-                    <span className="rounded-full bg-[#8DECB4]/30 dark:bg-[#1DCD9F]/20 px-2.5 py-0.5 text-xs font-semibold text-[#141E46] dark:text-[#1DCD9F] border border-[#41B06E]/30 dark:border-[#1DCD9F]/40">{p.current_department}</span>
-                  ) : (
-                    <span className="text-[#94a0b2] dark:text-slate-600">—</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-[#5A6578] dark:text-slate-400">{p.org_email || p.personal_email || "—"}</td>
-                <td className="px-4 py-3 text-[#141E46]/90 dark:text-slate-300">{p.city || "—"}</td>
-              </tr>
+              <DirectoryRow key={p.id} person={p} idx={idx} onInfoEnter={onAnchorEnter} onInfoLeave={onAnchorLeave} onRowClick={onRowClick} />
             ))}
             {!loading && persons.length === 0 && (
               <tr>
@@ -363,15 +397,22 @@ function onCardLeave() {
         </div>
       </div>
 
-      {hover && persons.some((p) => p.id === hover.id) && (
-        <PersonHoverCard
-          personId={hover.id}
-          fallback={persons.find((p) => p.id === hover.id)!}
-          anchorRect={hover.rect}
-          onEnter={onCardEnter}
-          onLeave={onCardLeave}
-        />
-      )}
+      {(() => {
+        if (!hover) return null;
+        const fallbackPerson = persons.find((p) => p.id === hover.id);
+        if (!fallbackPerson) return null;
+        return (
+          <PersonHoverCard
+            personId={hover.id}
+            fallback={fallbackPerson}
+            anchorRect={hover.rect}
+            onEnter={onCardEnter}
+            onLeave={onCardLeave}
+          />
+        );
+      })()}
+
+      <PersonDrawer personId={selectedId} onClose={closeDrawer} />
     </div>
   );
 }

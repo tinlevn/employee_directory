@@ -69,3 +69,46 @@ func (h *OrgHandler) Create(c *fiber.Ctx) error {
 	}
 	return c.Status(fiber.StatusCreated).JSON(created)
 }
+
+func (h *OrgHandler) Update(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid id")
+	}
+	var req struct {
+		Name string `json:"name"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	if req.Name == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "name is required")
+	}
+
+	o, err := h.repo.Update(c.Context(), id, req.Name)
+	if err != nil {
+		return middleware.RepositoryError(err)
+	}
+	if o == nil {
+		return fiber.NewError(fiber.StatusNotFound, "organization not found")
+	}
+	return c.JSON(o)
+}
+
+func (h *OrgHandler) Delete(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid id")
+	}
+	count, err := h.repo.PersonCount(c.Context(), id)
+	if err != nil {
+		return middleware.RepositoryError(err)
+	}
+	if count > 0 {
+		return fiber.NewError(fiber.StatusConflict, "cannot delete organization with persons")
+	}
+	if err := h.repo.Delete(c.Context(), id); err != nil {
+		return middleware.RepositoryError(err)
+	}
+	return c.SendStatus(fiber.StatusNoContent)
+}

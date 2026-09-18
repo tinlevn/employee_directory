@@ -3,6 +3,7 @@ package middleware
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 
 	"employee-directory-api/internal/dto"
@@ -36,6 +37,7 @@ func ErrorHandler(c *fiber.Ctx, err error) error {
 			TraceID: c.GetRespHeader("X-Request-Id"),
 		})
 	} else if err != nil {
+		log.Printf("ERROR [trace=%s] unhandled: %v", c.GetRespHeader("X-Request-Id"), err)
 		msg = http.StatusText(code)
 	}
 	if code >= fiber.StatusInternalServerError && code != fiber.StatusNotImplemented {

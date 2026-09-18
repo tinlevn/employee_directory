@@ -196,39 +196,31 @@ A staff-level code review identified release blockers. All **except authenticati
 
 ---
 
-## 8. NOT DONE — Security (Critical)
+## 8. Security Status
 
-Authentication and authorization were **explicitly deferred** and are the biggest remaining gap. The API must not be exposed to the public internet.
+### Implemented
 
-### What is missing
+- **JWT authentication** — stateless HMAC-SHA256 tokens issued on login/register, validated by `middleware.RequireAuth()`.
+- **RBAC** — four-tier role system (`admin`, `manager`, `staff`, `read-only`) enforced by `middleware.RequireRole()`. Mutations restricted to admin/manager.
+- **Token-derived tenancy** — `org_id` extracted from JWT claims, not request bodies. All repository queries scoped to caller's organization.
+- **Password hashing** — bcrypt (cost 10) via `golang.org/x/crypto/bcrypt`.
+- **Login/registration endpoints** — `POST /api/v1/auth/login` and `POST /api/v1/auth/register`.
+- **Field-level compensation masking** — salary/hourly rate redacted on employment endpoints for non-admin/non-manager callers.
+- **Rate limiting** — not yet implemented.
+- **Parameterized SQL** everywhere (no injection).
+- **Sort-field whitelist** (no ORDER BY injection).
+- **1 MB request body limit**.
+- **CORS** restricted to configured origins.
+- **DB-level** same-org compound FKs and event immutability trigger.
 
-- **No authentication** — all endpoints are anonymous.
-- **No authorization / RBAC** — no role checks despite `person_accounts.role` existing in the schema (unused).
-- **No JWT / session / API-key middleware**.
-- **Client-controlled tenancy** — `org_id` is taken from request bodies/query strings (`dto/request.go`). A caller can read/write arbitrary organizations. There is no token-derived org context.
-- **No rate limiting**.
-- **No CSRF protection** (irrelevant for token-auth APIs, but relevant if cookies are later used).
-- **No field-level access control** — salary, personal email, phone, address, DOB, notes are returned to any caller.
-- **No TLS termination** at the app (expected at proxy/load balancer).
-- **`person_accounts`** table exists but has no login/registration endpoints and `password_hash` is unpopulated.
+### Remaining gaps
 
-### What IS in place (defense-in-depth only)
-
-- Parameterized SQL everywhere (no injection).
-- Sort-field whitelist (no ORDER BY injection).
-- 1 MB request body limit.
-- CORS restricted to configured origins.
-- `requestid`, logger, recover middleware.
-- DB-level same-org FKs and event immutability trigger.
-
-### Recommended auth work (next session)
-
-1. Introduce JWT auth middleware; derive `org_id` from the authenticated principal, not the request body.
-2. Add RBAC middleware using `person_accounts.role` (`admin`/`manager`/`staff`/`read-only`).
-3. Split public directory DTOs from HR/admin DTOs (hide salary + private contact data from general listing).
-4. Add rate limiting and request logging with trace IDs.
-5. Add login/registration endpoints + password hashing (bcrypt/argon2).
-6. Re-evaluate CORS for production origins.
+- **Registration is open** — any anonymous user who knows a `person_id` UUID can register an account. Consider requiring admin-generated invitation tokens.
+- **JWT stored in localStorage** — vulnerable to XSS. Consider migrating to `HttpOnly` cookies.
+- **No Content Security Policy** headers.
+- **Soft-delete does not deactivate accounts** — a terminated employee's JWT remains valid until expiry (fix in progress).
+- **No rate limiting** on auth endpoints.
+- **Person detail endpoint** returns PII (personal_email, phone, address, DOB) to all authenticated users — no field masking on the `/persons` list/get endpoints.
 
 ---
 
@@ -280,7 +272,6 @@ docker compose up --build
 
 ## 10. Known Limitations / Pitfalls
 
-- **No auth** (see §8) — biggest blocker to any real deployment.
 - **No Go unit tests for handlers/middleware** — only repository + DTO tests exist. Handler-level HTTP tests still needed.
 - **Legacy compat routes** (`/api/employees`) are a placeholder and do **not** preserve the old Angular response shape; they should be removed once the old client is gone.
 - **`person_accounts`, skills, languages, documents, certifications, benefits** tables exist but have no API endpoints.
@@ -294,10 +285,7 @@ docker compose up --build
 
 ## 11. Suggested Next Steps (Priority Order)
 
-1. Authentication + tenant derivation (P0).
-2. RBAC + field-level DTO separation (P0).
-3. Handler-level HTTP tests (P1).
-4. Remove legacy `/api/employees` compat routes.
-5. Wire up supporting tables (skills/documents/certifications/benefits) to endpoints.
-6. Add password hashing + login/registration.
-7. Delete deprecated `staff-api`/`staff-client`.
+1. Handler-level HTTP tests (P1).
+2. Remove legacy `/api/employees` compat routes.
+3. Wire up supporting tables (skills/documents/certifications/benefits) to endpoints.
+4. Delete deprecated `staff-api`/`staff-client`.

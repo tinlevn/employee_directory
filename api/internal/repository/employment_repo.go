@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"employee-directory-api/internal/domain"
 
@@ -123,4 +124,33 @@ func (r *EmploymentRepository) HeadcountByDept(ctx context.Context, orgID *uuid.
 		}{d, c})
 	}
 	return out, rows.Err()
+}
+
+func (r *EmploymentRepository) UpdateCurrent(ctx context.Context, personID, empID uuid.UUID, fields map[string]any) (*domain.EmploymentRecord, error) {
+	if len(fields) == 0 {
+		return r.GetByID(ctx, empID)
+	}
+	
+	set := make([]string, 0, len(fields))
+	args := make([]any, 0, len(fields)+2)
+	
+	i := 1
+	for k, v := range fields {
+		set = append(set, fmt.Sprintf("%s = $%d", k, i))
+		args = append(args, v)
+		i++
+	}
+	args = append(args, personID, empID)
+	sql := fmt.Sprintf(`UPDATE employment_records SET %s, updated_at=now() WHERE person_id=$%d AND id=$%d AND is_current=true RETURNING id`, strings.Join(set, ", "), i, i+1)
+	
+	row := r.pool.QueryRow(ctx, sql, args...)
+	var updatedID uuid.UUID
+	err := row.Scan(&updatedID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil // Not found or not current
+		}
+		return nil, err
+	}
+	return r.GetByID(ctx, updatedID)
 }

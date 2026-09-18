@@ -27,8 +27,8 @@ export default function LoginForm() {
       const data = await res.json();
       localStorage.setItem("token", data.token);
       window.location.href = "/";
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Login failed");
     } finally {
       setLoading(false);
     }

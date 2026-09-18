@@ -48,3 +48,27 @@ func (r *OrgRepository) List(ctx context.Context) ([]domain.Organization, error)
 	}
 	return out, rows.Err()
 }
+
+func (r *OrgRepository) Update(ctx context.Context, id uuid.UUID, name string) (*domain.Organization, error) {
+	row := r.pool.QueryRow(ctx, `UPDATE organizations SET name=$1, updated_at=now() WHERE id=$2 RETURNING id, name, type, country, timezone, is_active, created_at, updated_at`, name, id)
+	var o domain.Organization
+	err := row.Scan(&o.ID, &o.Name, &o.Type, &o.Country, &o.Timezone, &o.IsActive, &o.CreatedAt, &o.UpdatedAt)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &o, nil
+}
+
+func (r *OrgRepository) PersonCount(ctx context.Context, id uuid.UUID) (int, error) {
+	var count int
+	err := r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM persons WHERE org_id=$1`, id).Scan(&count)
+	return count, err
+}
+
+func (r *OrgRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	_, err := r.pool.Exec(ctx, `DELETE FROM organizations WHERE id=$1`, id)
+	return err
+}

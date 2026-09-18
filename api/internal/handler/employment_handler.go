@@ -106,7 +106,10 @@ func (h *EmploymentHandler) Create(c *fiber.Ctx) error {
 		return err
 	}
 	orgID := middleware.GetOrgID(c)
-	validFrom, _ := time.Parse("2006-01-02", req.ValidFrom)
+	validFrom, err := time.Parse("2006-01-02", req.ValidFrom)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid valid_from date format, expected YYYY-MM-DD")
+	}
 	rec := domain.EmploymentRecord{
 		ID: uuid.New(), PersonID: pid, OrgID: orgID,
 		EmployeeID: req.EmployeeID, JobTitle: req.JobTitle, JobLevel: req.JobLevel,
@@ -150,4 +153,42 @@ func (h *EmploymentHandler) Create(c *fiber.Ctx) error {
 		return middleware.RepositoryError(err)
 	}
 	return c.Status(fiber.StatusCreated).JSON(rec)
+}
+
+func (h *EmploymentHandler) Update(c *fiber.Ctx) error {
+	pid, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid person id")
+	}
+	empID, err := uuid.Parse(c.Params("empId"))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid employment id")
+	}
+	if err := h.ensurePersonInTenant(c, pid); err != nil {
+		return err
+	}
+	var fields map[string]any
+	if err := c.BodyParser(&fields); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	
+	// Ensure we don't accidentally update unchangeable fields
+	delete(fields, "id")
+	delete(fields, "person_id")
+	delete(fields, "org_id")
+	delete(fields, "is_current")
+	delete(fields, "created_at")
+	delete(fields, "updated_at")
+
+	rec, err := h.repo.UpdateCurrent(c.Context(), pid, empID, fields)
+	if err != nil {
+		return middleware.RepositoryError(err)
+	}
+	if rec == nil {
+		return fiber.NewError(fiber.StatusNotFound, "employment record not found or not current")
+	}
+	if !canViewCompensation(c, pid) {
+		rec.MaskSensitiveDetails()
+	}
+	return c.JSON(rec)
 }

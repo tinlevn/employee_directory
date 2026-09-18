@@ -29,3 +29,38 @@ func (h *AnalyticsHandler) Headcount(c *fiber.Ctx) error {
 	}
 	return c.JSON(data)
 }
+
+func (h *AnalyticsHandler) Attrition(c *fiber.Ctx) error {
+	orgID := middleware.GetOrgID(c)
+	from := c.Query("from")
+	to := c.Query("to")
+	data, err := h.repo.Attrition(c.Context(), &orgID, from, to)
+	if err != nil {
+		return middleware.RepositoryError(err)
+	}
+	return c.JSON(data)
+}
+
+func (h *AnalyticsHandler) Movements(c *fiber.Ctx) error {
+	orgID := middleware.GetOrgID(c)
+	from := c.Query("from")
+	to := c.Query("to")
+	data, err := h.repo.Movements(c.Context(), &orgID, from, to)
+	if err != nil {
+		return middleware.RepositoryError(err)
+	}
+	if data == nil {
+		data = []dto.MovementPoint{}
+	}
+	return c.JSON(data)
+}
+
+func (h *AnalyticsHandler) Snapshot(c *fiber.Ctx) error {
+	orgID := middleware.GetOrgID(c)
+	date := c.Params("date")
+	data, err := h.repo.Snapshot(c.Context(), date, &orgID)
+	if err != nil {
+		return middleware.RepositoryError(err)
+	}
+	return c.JSON(data)
+}

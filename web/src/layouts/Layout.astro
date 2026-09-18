@@ -9,6 +9,7 @@ const apiBase = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:8080; img-src 'self' data: https:; font-src 'self';" />
     <meta name="description" content="Employee Directory - Fast, searchable employee data." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
@@ -35,7 +36,7 @@ const apiBase = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
             API Health
             <svg class="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
           </a>
-          <AuthNav client:load />
+          <AuthNav client:idle />
           <button
             id="theme-toggle"
             type="button"

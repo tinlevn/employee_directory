@@ -33,8 +33,8 @@ export default function RegisterForm() {
       const data = await res.json();
       localStorage.setItem("token", data.token);
       window.location.href = "/";
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setLoading(false);
     }

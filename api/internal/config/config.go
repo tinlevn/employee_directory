@@ -1,6 +1,7 @@
 package config
 
 import (
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -22,7 +23,7 @@ func Load() Config {
 	_ = godotenv.Load()
 	_ = godotenv.Load(".env.local")
 
-	return Config{
+	cfg := Config{
 		Port:           envOr("PORT", "8080"),
 		DatabaseURL:    envOr("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/employee_directory?sslmode=disable"),
 		AllowedOrigins: splitCSV(envOr("CORS_ALLOWED_ORIGINS", "http://localhost:4321,http://localhost:5173")),
@@ -31,6 +32,12 @@ func Load() Config {
 		JWTSecret:      envOr("JWT_SECRET", "dev-insecure-secret-change-me"),
 		JWTTTL:         envOr("JWT_TTL", "24h"),
 	}
+
+	if cfg.Env == "production" && cfg.JWTSecret == "dev-insecure-secret-change-me" {
+		log.Fatal("FATAL: JWT_SECRET must be set in production — refusing to start with default secret")
+	}
+
+	return cfg
 }
 
 func envOr(k, fallback string) string {

@@ -7,6 +7,20 @@ on:
 jobs:
   api:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: employee_directory_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
     defaults:
       run:
         working-directory: api
@@ -18,7 +32,10 @@ jobs:
           cache-dependency-path: api/go.sum
       - run: gofmt -l . | tee /tmp/gofmt.txt && test ! -s /tmp/gofmt.txt
       - run: go vet ./...
-      - run: go test ./... -count=1
+      - name: Run tests with database
+        env:
+          TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/employee_directory_test?sslmode=disable
+        run: go test ./... -count=1 -v
       - run: go build ./...
 
   web:

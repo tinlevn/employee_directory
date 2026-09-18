@@ -137,10 +137,15 @@ func main() {
 
 		// analytics
 		api.Get("/analytics/headcount", analyticsH.Headcount)
+		api.Get("/analytics/attrition", analyticsH.Attrition)
+		api.Get("/analytics/movements", analyticsH.Movements)
+		api.Get("/analytics/snapshot/:date", analyticsH.Snapshot)
 
 		// admin-only
 		admin := api.Group("", middleware.RequireRole("admin"))
 		admin.Post("/organizations", orgH.Create)
+		admin.Patch("/organizations/:id", orgH.Update)
+		admin.Delete("/organizations/:id", orgH.Delete)
 
 		// mutations: admin or manager
 		mut := api.Group("", middleware.RequireRole("admin", "manager"))
@@ -151,6 +156,7 @@ func main() {
 		mut.Patch("/persons/:id/emergency-contact", emergencyH.Update)
 		mut.Delete("/persons/:id/emergency-contact", emergencyH.Delete)
 		mut.Post("/persons/:id/employment", employmentH.Create)
+		mut.Patch("/persons/:id/employment/:empId", employmentH.Update)
 		mut.Post("/persons/:id/events", eventH.CreateEvent)
 		mut.Post("/persons/:id/transfers", eventH.CreateTransfer)
 	} else {

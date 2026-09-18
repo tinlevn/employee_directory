@@ -245,6 +245,25 @@ func (r *PersonRepository) Update(ctx context.Context, id, orgID uuid.UUID, fiel
 }
 
 func (r *PersonRepository) SoftDelete(ctx context.Context, id, orgID uuid.UUID, reason string) (bool, error) {
-	result, err := r.pool.Exec(ctx, `UPDATE persons SET is_active=false, archived_at=now(), archive_reason=$3, updated_at=now() WHERE id=$1 AND org_id=$2`, id, orgID, reason)
-	return result.RowsAffected() > 0, err
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return false, err
+	}
+	defer tx.Rollback(ctx)
+
+	result, err := tx.Exec(ctx, `UPDATE persons SET is_active=false, archived_at=now(), archive_reason=$3, updated_at=now() WHERE id=$1 AND org_id=$2`, id, orgID, reason)
+	if err != nil {
+		return false, err
+	}
+
+	_, err = tx.Exec(ctx, `UPDATE person_accounts SET is_active=false, account_locked=true, updated_at=now() WHERE person_id=$1`, id)
+	if err != nil {
+		return false, err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return false, err
+	}
+
+	return result.RowsAffected() > 0, nil
 }

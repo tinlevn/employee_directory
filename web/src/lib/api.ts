@@ -125,12 +125,12 @@ export const api = {
     const qs = sp.toString();
     return req<Paginated<Person>>(`/api/v1/persons${qs ? `?${qs}` : ""}`);
   },
-  getPerson: (id: string) => req<Person>(`/api/v1/persons/${id}`),
+  getPerson: (id: string, init?: RequestInit) => req<Person>(`/api/v1/persons/${id}`, init),
   createPerson: (body: unknown) => req<Person>(`/api/v1/persons`, { method: "POST", body: JSON.stringify(body) }),
   getEmergencyContact: (personId: string) => req<EmergencyContact>(`/api/v1/persons/${personId}/emergency-contact`),
   upsertEmergencyContact: (personId: string, body: unknown) => req<EmergencyContact>(`/api/v1/persons/${personId}/emergency-contact`, { method: "POST", body: JSON.stringify(body) }),
   listEmployment: (id: string) => req<EmploymentRecord[]>(`/api/v1/persons/${id}/employment`),
-  getCurrentEmployment: (id: string) => req<EmploymentRecord>(`/api/v1/persons/${id}/employment/current`),
+  getCurrentEmployment: (id: string, init?: RequestInit) => req<EmploymentRecord>(`/api/v1/persons/${id}/employment/current`, init),
   listEvents: (id: string, q: Record<string, string | number | undefined> = {}) => {
     const sp = new URLSearchParams();
     for (const [k, v] of Object.entries(q)) if (v !== undefined && v !== "") sp.set(k, String(v));
