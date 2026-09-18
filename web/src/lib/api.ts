@@ -81,6 +81,19 @@ export interface HeadcountRow {
 
 
 
+export interface AuthResponse {
+  token: string;
+  account?: Record<string, unknown>;
+  org_id?: string;
+}
+
+export interface RegisterBody {
+  username: string;
+  password: string;
+  person_id: string;
+  role?: string;
+}
+
 export interface Paginated<T> {
   data: T[];
   page: number;
@@ -103,7 +116,7 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
     if (res.status === 401 && typeof window !== "undefined" && window.location.pathname !== "/login" && window.location.pathname !== "/register") {
       localStorage.removeItem("token");
       window.location.href = "/login";
-      return new Promise(() => {}); // Wait for redirect
+      throw new Error("401 Unauthorized");
     }
 
     let detail = "request failed";
@@ -119,6 +132,10 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  login: (body: { username: string; password: string }) =>
+    req<AuthResponse>(`/api/v1/auth/login`, { method: "POST", body: JSON.stringify(body) }),
+  register: (body: RegisterBody) =>
+    req<AuthResponse>(`/api/v1/auth/register`, { method: "POST", body: JSON.stringify(body) }),
   listPersons: (q: Record<string, string | number | undefined> = {}) => {
     const sp = new URLSearchParams();
     for (const [k, v] of Object.entries(q)) if (v !== undefined && v !== "") sp.set(k, String(v));

@@ -37,6 +37,7 @@ interface Props {
   anchorRect: DOMRect;
   onEnter: () => void;
   onLeave: () => void;
+  onOpenDrawer: (id: string) => void;
 }
 
 function initials(p: Person) {
@@ -46,13 +47,13 @@ function initials(p: Person) {
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex justify-between gap-3">
-      <span className="shrink-0 text-[#5A6578] dark:text-slate-400">{label}</span>
-      <span className="min-w-0 truncate text-right text-[#141E46] dark:text-slate-200 font-medium">{children}</span>
+      <span className="shrink-0 text-slate-500 dark:text-slate-400">{label}</span>
+      <span className="min-w-0 truncate text-right text-navy dark:text-slate-200 font-medium">{children}</span>
     </div>
   );
 }
 
-export default function PersonHoverCard({ personId, fallback, anchorRect, onEnter, onLeave }: Props) {
+export default function PersonHoverCard({ personId, fallback, anchorRect, onEnter, onLeave, onOpenDrawer }: Props) {
   const [details, setDetails] = useState<Details | null>(getCached(personId));
 
   useEffect(() => {
@@ -99,33 +100,33 @@ export default function PersonHoverCard({ personId, fallback, anchorRect, onEnte
         width: CARD_WIDTH,
         ...(below ? { top: anchorRect.bottom + 8 } : { bottom: vh - anchorRect.top + 8 }),
       }}
-      className="z-50 rounded-lg border border-[#E6DBC5] dark:border-[#2b303c] bg-white dark:bg-[#1c1f26] p-4 shadow-2xl transition-all"
+      className="z-50 rounded-lg border border-cream-border dark:border-dark-border bg-cream-card dark:bg-dark-card p-4 shadow-2xl transition-all"
     >
       <div className="flex items-start gap-3">
         {person.profile_photo_url ? (
-          <img src={person.profile_photo_url} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover border border-[#E6DBC5] dark:border-[#2b303c]" />
+          <img src={person.profile_photo_url} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover border border-cream-border dark:border-dark-border" />
         ) : (
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#8DECB4]/30 dark:bg-[#1DCD9F]/20 text-[#141E46] dark:text-[#1DCD9F] border border-[#41B06E]/30 dark:border-[#1DCD9F]/40 font-bold text-sm">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-pastel-mint/30 dark:bg-mint/20 text-navy dark:text-mint border border-forest/30 dark:border-mint/40 font-bold text-sm">
             {initials(person)}
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold text-[#141E46] dark:text-slate-100">
+          <p className="truncate font-semibold text-navy dark:text-slate-100">
             {person.first_name} {person.last_name}
-            {loading && <span className="ml-2 text-xs font-normal text-[#7A869A] dark:text-slate-400">loading…</span>}
+            {loading && <span className="ml-2 text-xs font-normal text-slate-400">loading…</span>}
           </p>
-          {person.preferred_name && <p className="text-xs text-[#5A6578] dark:text-slate-400">&ldquo;{person.preferred_name}&rdquo;</p>}
-          <p className="mt-0.5 truncate text-sm text-[#5A6578] dark:text-slate-300">
+          {person.preferred_name && <p className="text-xs text-slate-500 dark:text-slate-400">&ldquo;{person.preferred_name}&rdquo;</p>}
+          <p className="mt-0.5 truncate text-sm text-slate-500 dark:text-slate-300">
             {employment?.job_title || person.current_job_title || "—"}
           </p>
           <div className="mt-1.5 flex flex-wrap gap-1">
             {(employment?.department || person.current_department) && (
-              <span className="rounded-full bg-[#8DECB4]/30 dark:bg-[#1DCD9F]/20 px-2.5 py-0.5 text-xs font-semibold text-[#141E46] dark:text-[#1DCD9F] border border-[#41B06E]/30 dark:border-[#1DCD9F]/40">
+              <span className="rounded-full bg-pastel-mint/30 dark:bg-mint/20 px-2.5 py-0.5 text-xs font-semibold text-navy dark:text-mint border border-forest/30 dark:border-mint/40">
                 {employment?.department || person.current_department}
               </span>
             )}
             {employment?.employment_status && (
-              <span className="rounded-full bg-[#F8EFE0] dark:bg-[#252a34] px-2 py-0.5 text-xs text-[#5A6578] dark:text-slate-300 border border-[#E6DBC5] dark:border-[#2b303c]">
+              <span className="rounded-full bg-cream-hover dark:bg-dark-hover px-2 py-0.5 text-xs text-slate-600 dark:text-slate-300 border border-cream-border dark:border-dark-border">
                 {employment.employment_status}
               </span>
             )}
@@ -136,7 +137,7 @@ export default function PersonHoverCard({ personId, fallback, anchorRect, onEnte
         </div>
       </div>
 
-      <div className="mt-3 space-y-1.5 border-t border-[#E6DBC5] dark:border-[#2b303c] pt-3 text-sm">
+      <div className="mt-3 space-y-1.5 border-t border-cream-border dark:border-dark-border pt-3 text-sm">
         <Row label="Email">{person.org_email || person.personal_email || "—"}</Row>
         <Row label="Phone">{person.phone_primary || "—"}</Row>
         <Row label="Location">{[person.city, person.country].filter(Boolean).join(", ") || "—"}</Row>
@@ -147,21 +148,22 @@ export default function PersonHoverCard({ personId, fallback, anchorRect, onEnte
       </div>
 
       {person.tags.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1 border-t border-[#E6DBC5] dark:border-[#2b303c] pt-3">
+        <div className="mt-3 flex flex-wrap gap-1 border-t border-cream-border dark:border-dark-border pt-3">
           {person.tags.map((t) => (
-            <span key={t} className="rounded-full bg-[#F8EFE0] dark:bg-[#252a34] px-2 py-0.5 text-xs text-[#5A6578] dark:text-slate-300 border border-[#E6DBC5] dark:border-[#2b303c]">
+            <span key={t} className="rounded-full bg-cream-hover dark:bg-dark-hover px-2 py-0.5 text-xs text-slate-600 dark:text-slate-300 border border-cream-border dark:border-dark-border">
               {t}
             </span>
           ))}
         </div>
       )}
 
-      <a
-        href={`/person?id=${encodeURIComponent(personId)}`}
-        className="mt-3 block rounded-md bg-[#41B06E] hover:bg-[#329057] text-white dark:bg-[#1DCD9F] dark:hover:bg-[#169976] dark:text-slate-950 px-3 py-2 text-center text-sm font-semibold transition-colors shadow-sm"
+      <button
+        type="button"
+        onClick={() => onOpenDrawer(personId)}
+        className="mt-3 block w-full rounded-md bg-forest hover:bg-forest-hover text-white dark:bg-mint dark:hover:bg-mint-hover dark:text-slate-950 px-3 py-2 text-center text-sm font-semibold transition-colors shadow-sm cursor-pointer"
       >
         View full profile →
-      </a>
+      </button>
     </div>
   );
 }

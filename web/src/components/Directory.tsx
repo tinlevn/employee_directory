@@ -51,7 +51,7 @@ interface DirectoryRowProps {
 const DirectoryRow = memo(function DirectoryRow({ person: p, idx, onInfoEnter, onInfoLeave, onRowClick }: DirectoryRowProps) {
   return (
     <tr
-      className={`border-t border-[#E6DBC5] dark:border-[#2b303c] ${idx % 2 === 0 ? "bg-white dark:bg-[#1c1f26]" : "bg-[#FFF9EE] dark:bg-[#20242d]"} hover:bg-[#8DECB4]/25 dark:hover:bg-[#1DCD9F]/10 transition-colors`}
+      className={`border-t border-cream-border dark:border-dark-border ${idx % 2 === 0 ? "bg-cream-card dark:bg-dark-card" : "bg-[#FFF9EE] dark:bg-[#20242d]"} hover:bg-pastel-mint/25 dark:hover:bg-mint/10 transition-colors`}
     >
       <td className="px-4 py-3 font-medium">
         <span className="flex items-center gap-1.5">
@@ -62,30 +62,30 @@ const DirectoryRow = memo(function DirectoryRow({ person: p, idx, onInfoEnter, o
             onMouseLeave={onInfoLeave}
             onFocus={(e) => onInfoEnter(e, p.id)}
             onBlur={onInfoLeave}
-            className="shrink-0 rounded p-0.5 text-[#5A6578] dark:text-slate-500 transition-colors hover:bg-[#E6DBC5]/60 dark:hover:bg-[#252a34] hover:text-[#141E46] dark:hover:text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#41B06E]"
+            className="shrink-0 rounded p-0.5 text-slate-500 dark:text-slate-400 transition-colors hover:bg-cream-border/60 dark:hover:bg-dark-hover hover:text-navy dark:hover:text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-forest dark:focus-visible:ring-mint cursor-pointer"
           >
             <InfoIcon />
           </button>
           <button
             type="button"
             onClick={() => onRowClick(p.id)}
-            className="truncate text-left text-[#141E46] dark:text-slate-100 hover:text-[#41B06E] dark:hover:text-[#1DCD9F] transition-colors font-medium focus:outline-none focus-visible:underline"
+            className="truncate text-left text-navy dark:text-slate-100 hover:text-forest dark:hover:text-mint transition-colors font-medium focus:outline-none focus-visible:underline cursor-pointer"
           >
             {p.first_name} {p.last_name}
           </button>
-          {p.preferred_name && <span className="shrink-0 text-[#7A869A] dark:text-slate-500">({p.preferred_name})</span>}
+          {p.preferred_name && <span className="shrink-0 text-slate-400 dark:text-slate-500">({p.preferred_name})</span>}
         </span>
       </td>
-      <td className="px-4 py-3 text-[#141E46]/90 dark:text-slate-300">{p.current_job_title || "—"}</td>
+      <td className="px-4 py-3 text-navy/90 dark:text-slate-300">{p.current_job_title || "—"}</td>
       <td className="px-4 py-3">
         {p.current_department ? (
-          <span className="rounded-full bg-[#8DECB4]/30 dark:bg-[#1DCD9F]/20 px-2.5 py-0.5 text-xs font-semibold text-[#141E46] dark:text-[#1DCD9F] border border-[#41B06E]/30 dark:border-[#1DCD9F]/40">{p.current_department}</span>
+          <span className="rounded-full bg-pastel-mint/30 dark:bg-mint/20 px-2.5 py-0.5 text-xs font-semibold text-navy dark:text-mint border border-forest/30 dark:border-mint/40">{p.current_department}</span>
         ) : (
-          <span className="text-[#94a0b2] dark:text-slate-600">—</span>
+          <span className="text-slate-400 dark:text-slate-600">—</span>
         )}
       </td>
-      <td className="px-4 py-3 text-[#5A6578] dark:text-slate-400">{p.org_email || p.personal_email || "—"}</td>
-      <td className="px-4 py-3 text-[#141E46]/90 dark:text-slate-300">{p.city || "—"}</td>
+      <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{p.org_email || p.personal_email || "—"}</td>
+      <td className="px-4 py-3 text-navy/90 dark:text-slate-300">{p.city || "—"}</td>
     </tr>
   );
 });
@@ -267,12 +267,12 @@ export default function Directory() {
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && onSearch()}
           placeholder="Search name / email / job title..."
-          className="w-64 rounded-md border border-[#E6DBC5] dark:border-[#2b303c] bg-white dark:bg-[#1c1f26] px-3 py-2 text-sm text-[#141E46] dark:text-slate-100 placeholder-[#7A869A] dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#41B06E]/50 dark:focus:ring-[#1DCD9F]/50 focus:border-[#41B06E] dark:focus:border-[#1DCD9F] transition-colors"
+          className="w-64 rounded-md border border-cream-border dark:border-dark-border bg-cream-card dark:bg-dark-card px-3 py-2 text-sm text-navy dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-forest/50 dark:focus:ring-mint/50 focus:border-forest dark:focus:border-mint transition-colors"
         />
         <select
           value={department}
           onChange={(e) => setDepartment(e.target.value)}
-          className="w-64 rounded-md border border-[#E6DBC5] dark:border-[#2b303c] bg-white dark:bg-[#1c1f26] px-3 py-2 text-sm text-[#141E46] dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#41B06E]/50 dark:focus:ring-[#1DCD9F]/50 focus:border-[#41B06E] dark:focus:border-[#1DCD9F] transition-colors"
+          className="w-64 rounded-md border border-cream-border dark:border-dark-border bg-cream-card dark:bg-dark-card px-3 py-2 text-sm text-navy dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-forest/50 dark:focus:ring-mint/50 focus:border-forest dark:focus:border-mint transition-colors"
         >
           <option value="">All Departments</option>
           {departments.map((d) => (
@@ -281,15 +281,15 @@ export default function Directory() {
             </option>
           ))}
         </select>
-        <button onClick={onSearch} className="rounded-md bg-[#41B06E] hover:bg-[#329057] text-white dark:bg-[#1DCD9F] dark:hover:bg-[#169976] dark:text-slate-950 px-4 py-2 text-sm font-semibold transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#41B06E] dark:focus:ring-[#1DCD9F]">
+        <button onClick={onSearch} className="rounded-md bg-forest hover:bg-forest-hover text-white dark:bg-mint dark:hover:bg-mint-hover dark:text-slate-950 px-4 py-2 text-sm font-semibold transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-forest dark:focus:ring-mint cursor-pointer">
           Search
         </button>
-        <span className="self-center text-sm text-[#5A6578] dark:text-slate-400">
+        <span className="self-center text-sm text-slate-500 dark:text-slate-400">
           {total} results · page {page} of {totalPages}
         </span>
         <div className="ml-auto flex items-center gap-2 text-sm">
-          <span className="text-[#5A6578] dark:text-slate-400">Rows:</span>
-          <select value={pageSize} onChange={onPageSizeChange} className="rounded-md border border-[#E6DBC5] dark:border-[#2b303c] bg-white dark:bg-[#1c1f26] text-[#141E46] dark:text-slate-100 px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#41B06E]/50 dark:focus:ring-[#1DCD9F]/50">
+          <span className="text-slate-500 dark:text-slate-400">Rows:</span>
+          <select value={pageSize} onChange={onPageSizeChange} className="rounded-md border border-cream-border dark:border-dark-border bg-cream-card dark:bg-dark-card text-navy dark:text-slate-100 px-2 py-1 focus:outline-none focus:ring-2 focus:ring-forest/50 dark:focus:ring-mint/50">
             <option value={10}>10</option>
             <option value={20}>20</option>
             <option value={50}>50</option>
@@ -298,19 +298,19 @@ export default function Directory() {
         </div>
       </div>
 
-      {loading && <p className="text-sm text-[#5A6578] dark:text-slate-400">Loading...</p>}
+      {loading && <p className="text-sm text-slate-500 dark:text-slate-400">Loading...</p>}
       {error && <p className="rounded-md bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-600 dark:text-red-400">{error} — is the Go API running on :8080?</p>}
 
-      <div className="overflow-x-auto rounded-lg border border-[#E6DBC5] dark:border-[#2b303c] bg-white dark:bg-[#1c1f26] shadow-sm">
+      <div className="overflow-x-auto rounded-lg border border-cream-border dark:border-dark-border bg-cream-card dark:bg-dark-card shadow-sm">
         <table className="w-full text-left text-sm">
-          <thead className="bg-[#F8EFE0] dark:bg-[#252a34]/60 text-xs uppercase font-semibold text-[#141E46] dark:text-slate-400 border-b border-[#E6DBC5] dark:border-[#2b303c]">
+          <thead className="bg-cream-hover dark:bg-dark-hover/60 text-xs uppercase font-semibold text-navy dark:text-slate-400 border-b border-cream-border dark:border-dark-border">
             <tr>
               <th
                 onClick={() => toggleSort("name")}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleSort("name"); } }}
-                className="px-4 py-3 cursor-pointer select-none hover:text-[#41B06E] dark:hover:text-[#1DCD9F] transition-colors"
+                className="px-4 py-3 cursor-pointer select-none hover:text-forest dark:hover:text-mint transition-colors"
                 title="Click to sort by Name (A-Z / Z-A)"
               >
                 <div className="flex items-center gap-1.5">
@@ -330,7 +330,7 @@ export default function Directory() {
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleSort("city"); } }}
-                className="px-4 py-3 cursor-pointer select-none hover:text-[#41B06E] dark:hover:text-[#1DCD9F] transition-colors"
+                className="px-4 py-3 cursor-pointer select-none hover:text-forest dark:hover:text-mint transition-colors"
                 title="Click to sort by City (A-Z / Z-A)"
               >
                 <div className="flex items-center gap-1.5">
@@ -350,8 +350,8 @@ export default function Directory() {
             ))}
             {!loading && persons.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-[#5A6578] dark:text-slate-400">
-                  No results. Create a person via <code className="rounded bg-[#F8EFE0] dark:bg-[#252a34] text-[#141E46] dark:text-[#1DCD9F] px-1 py-0.5 font-mono text-xs">POST /api/v1/persons</code>
+                <td colSpan={5} className="px-4 py-10 text-center text-slate-500 dark:text-slate-400">
+                  No results. Create a person via <code className="rounded bg-cream-hover dark:bg-dark-hover text-navy dark:text-mint px-1 py-0.5 font-mono text-xs">POST /api/v1/persons</code>
                 </td>
               </tr>
             )}
@@ -360,20 +360,20 @@ export default function Directory() {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-[#5A6578] dark:text-slate-400">
+        <p className="text-sm text-slate-500 dark:text-slate-400">
           Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total}
         </p>
         <div className="flex items-center gap-1">
           <button
             onClick={() => goTo(page - 1)}
             disabled={page <= 1 || loading}
-            className="rounded-md border border-[#E6DBC5] dark:border-[#2b303c] bg-white dark:bg-[#1c1f26] text-[#141E46] dark:text-slate-300 px-3 py-1.5 text-sm disabled:opacity-40 hover:bg-[#8DECB4]/20 hover:text-[#41B06E] dark:hover:bg-[#1DCD9F]/10 dark:hover:text-[#1DCD9F] transition-colors"
+            className="rounded-md border border-cream-border dark:border-dark-border bg-cream-card dark:bg-dark-card text-navy dark:text-slate-300 px-3 py-1.5 text-sm disabled:opacity-40 hover:bg-pastel-mint/20 hover:text-forest dark:hover:bg-mint/10 dark:hover:text-mint transition-colors cursor-pointer"
           >
             ← Prev
           </button>
           {pageNumbers().map((p, i) =>
             p === "..." ? (
-              <span key={`dots-${i}`} className="px-2 text-[#94a0b2] dark:text-slate-600">
+              <span key={`dots-${i}`} className="px-2 text-slate-400 dark:text-slate-600">
                 …
               </span>
             ) : (
@@ -381,7 +381,7 @@ export default function Directory() {
                 key={p}
                 onClick={() => goTo(p)}
                 disabled={loading}
-                className={`min-w-9 rounded-md px-3 py-1.5 text-sm transition-colors ${p === page ? "bg-[#41B06E] text-white font-semibold border border-[#41B06E] dark:bg-[#1DCD9F] dark:text-slate-950 dark:border-[#1DCD9F]" : "border border-[#E6DBC5] dark:border-[#2b303c] bg-white dark:bg-[#1c1f26] text-[#141E46] dark:text-slate-300 hover:bg-[#8DECB4]/20 hover:text-[#41B06E] dark:hover:bg-[#1DCD9F]/10 dark:hover:text-[#1DCD9F]"}`}
+                className={`min-w-9 rounded-md px-3 py-1.5 text-sm transition-colors cursor-pointer ${p === page ? "bg-forest text-white font-semibold border border-forest dark:bg-mint dark:text-slate-950 dark:border-mint" : "border border-cream-border dark:border-dark-border bg-cream-card dark:bg-dark-card text-navy dark:text-slate-300 hover:bg-pastel-mint/20 hover:text-forest dark:hover:bg-mint/10 dark:hover:text-mint"}`}
               >
                 {p}
               </button>
@@ -390,7 +390,7 @@ export default function Directory() {
           <button
             onClick={() => goTo(page + 1)}
             disabled={page >= totalPages || loading}
-            className="rounded-md border border-[#E6DBC5] dark:border-[#2b303c] bg-white dark:bg-[#1c1f26] text-[#141E46] dark:text-slate-300 px-3 py-1.5 text-sm disabled:opacity-40 hover:bg-[#8DECB4]/20 hover:text-[#41B06E] dark:hover:bg-[#1DCD9F]/10 dark:hover:text-[#1DCD9F] transition-colors"
+            className="rounded-md border border-cream-border dark:border-dark-border bg-cream-card dark:bg-dark-card text-navy dark:text-slate-300 px-3 py-1.5 text-sm disabled:opacity-40 hover:bg-pastel-mint/20 hover:text-forest dark:hover:bg-mint/10 dark:hover:text-mint transition-colors cursor-pointer"
           >
             Next →
           </button>
@@ -408,6 +408,7 @@ export default function Directory() {
             anchorRect={hover.rect}
             onEnter={onCardEnter}
             onLeave={onCardLeave}
+            onOpenDrawer={onRowClick}
           />
         );
       })()}

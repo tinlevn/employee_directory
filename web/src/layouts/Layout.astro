@@ -1,38 +1,65 @@
 ---
 import "../styles/global.css";
 import AuthNav from "../components/AuthNav";
-interface Props { title?: string }
+
+interface Props {
+  title?: string;
+}
+
 const { title = "Employee Directory" } = Astro.props;
 const apiBase = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
+const currentPath = Astro.url.pathname;
+const isCurrent = (path: string) => path === "/" ? currentPath === "/" : currentPath.startsWith(path);
 ---
 <html lang="en" class="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:8080; img-src 'self' data: https:; font-src 'self';" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content={`default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' ${apiBase}; img-src 'self' data: https:; font-src 'self';`}
+    />
     <meta name="description" content="Employee Directory - Fast, searchable employee data." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
     <script is:inline>
       const savedTheme = localStorage.getItem("theme");
-      if (savedTheme === "light") {
-        document.documentElement.classList.remove("dark");
-      } else {
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
         document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
       }
     </script>
   </head>
-  <body class="min-h-screen bg-[#FFF5E0] text-[#141E46] dark:bg-[#131519] dark:text-slate-100 antialiased transition-colors duration-200">
-    <nav class="sticky top-0 z-40 border-b border-[#E6DBC5] dark:border-[#2b303c] bg-[#FFF5E0]/90 dark:bg-[#1c1f26]/90 backdrop-blur-md transition-colors duration-200">
+  <body class="min-h-screen bg-cream-bg text-navy dark:bg-dark-bg dark:text-slate-100 antialiased transition-colors duration-200">
+    <nav class="sticky top-0 z-40 border-b border-cream-border dark:border-dark-border bg-cream-bg/90 dark:bg-dark-card/90 backdrop-blur-md transition-colors duration-200">
       <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
-        <a href="/" class="flex items-center gap-2 font-semibold tracking-tight text-[#141E46] dark:text-white hover:opacity-90 transition-opacity">
-          <span class="flex h-3 w-3 rounded-full bg-[#41B06E] dark:bg-[#1DCD9F] shadow-[0_0_8px_rgba(65,176,110,0.6)] dark:shadow-[0_0_8px_rgba(29,205,159,0.6)]"></span>
-          <span>Employee<span class="text-[#41B06E] dark:text-[#1DCD9F]">Directory</span></span>
+        <a href="/" class="flex items-center gap-2 font-semibold tracking-tight text-navy dark:text-white hover:opacity-90 transition-opacity">
+          <span class="flex h-3 w-3 rounded-full bg-forest dark:bg-mint shadow-[0_0_8px_rgba(65,176,110,0.6)] dark:shadow-[0_0_8px_rgba(29,205,159,0.6)]"></span>
+          <span>Employee<span class="text-forest dark:text-mint">Directory</span></span>
         </a>
         <div class="flex items-center gap-5 text-sm font-medium">
-          <a href="/" class="text-[#141E46] dark:text-slate-300 hover:text-[#41B06E] dark:hover:text-[#1DCD9F] transition-colors">Directory</a>
-          <a href="/analytics" class="text-[#141E46] dark:text-slate-300 hover:text-[#41B06E] dark:hover:text-[#1DCD9F] transition-colors">Analytics</a>
-          <a href={`${apiBase}/health`} target="_blank" class="text-[#141E46] dark:text-slate-300 hover:text-[#41B06E] dark:hover:text-[#1DCD9F] transition-colors flex items-center gap-1">
+          <a
+            href="/"
+            aria-current={isCurrent("/") ? "page" : undefined}
+            class={`transition-colors ${isCurrent("/") ? "text-forest dark:text-mint font-semibold" : "text-navy dark:text-slate-300 hover:text-forest dark:hover:text-mint"}`}
+          >
+            Directory
+          </a>
+          <a
+            href="/analytics"
+            aria-current={isCurrent("/analytics") ? "page" : undefined}
+            class={`transition-colors ${isCurrent("/analytics") ? "text-forest dark:text-mint font-semibold" : "text-navy dark:text-slate-300 hover:text-forest dark:hover:text-mint"}`}
+          >
+            Analytics
+          </a>
+          <a
+            href={`${apiBase}/health`}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-navy dark:text-slate-300 hover:text-forest dark:hover:text-mint transition-colors flex items-center gap-1"
+          >
             API Health
             <svg class="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
           </a>
@@ -42,7 +69,7 @@ const apiBase = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
             type="button"
             aria-label="Toggle theme"
             title="Toggle theme mode"
-            class="ml-2 rounded-lg border border-[#E6DBC5] dark:border-[#2b303c] p-2 text-[#141E46] dark:text-slate-300 hover:bg-[#F7EEDD] dark:hover:bg-[#252a34] hover:text-[#41B06E] dark:hover:text-[#1DCD9F] transition-colors focus:outline-none flex items-center justify-center cursor-pointer"
+            class="ml-2 rounded-lg border border-cream-border dark:border-dark-border p-2 text-navy dark:text-slate-300 hover:bg-cream-hover dark:hover:bg-dark-hover hover:text-forest dark:hover:text-mint transition-colors focus:outline-none flex items-center justify-center cursor-pointer"
           >
             <!-- Moon Icon (Shown in Light Mode to switch to Dark Mode) -->
             <svg id="theme-toggle-moon-stars" class="hidden w-5 h-5" viewBox="0 -960 960 960" fill="currentColor">
@@ -64,8 +91,9 @@ const apiBase = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
       const sunIcon = document.getElementById('theme-toggle-sun');
       const toggleBtn = document.getElementById('theme-toggle');
 
-      function updateIcons() {
+      function updateThemeUI() {
         const isDark = document.documentElement.classList.contains('dark');
+        toggleBtn?.setAttribute('aria-label', isDark ? 'Switch to light theme' : 'Switch to dark theme');
         if (isDark) {
           sunIcon?.classList.remove('hidden');
           moonStarsIcon?.classList.add('hidden');
@@ -74,7 +102,7 @@ const apiBase = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
           sunIcon?.classList.add('hidden');
         }
       }
-      updateIcons();
+      updateThemeUI();
 
       toggleBtn?.addEventListener('click', () => {
         const isDark = document.documentElement.classList.contains('dark');
@@ -85,9 +113,8 @@ const apiBase = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
           document.documentElement.classList.add('dark');
           localStorage.setItem('theme', 'dark');
         }
-        updateIcons();
+        updateThemeUI();
       });
     </script>
   </body>
 </html>
-
